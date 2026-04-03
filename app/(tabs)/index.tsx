@@ -1,98 +1,207 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../utils/api"; // 👉 1. Import your API
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+// 👉 2. Define the TypeScript interface
+interface Appointment {
+  _id: string;
+  title: string;
+  date: string;
+  durationHours: number;
+  status: string;
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+export default function Home() {
+  const router = useRouter();
+  const [userName, setUserName] = useState("Guest");
+  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(
+    null,
+  ); // 👉 State for dynamic shift
+  const [loadingShift, setLoadingShift] = useState(true);
+
+  const { colorScheme, setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    if (colorScheme) {
+      setColorScheme("light");
+    }
+    // Fetch the saved name
+    const fetchUserName = async () => {
+      try {
+        const savedName = await AsyncStorage.getItem("userName");
+        if (savedName) setUserName(savedName.split(" ")[0]);
+      } catch (error) {
+        console.error("Error loading user name:", error);
+      }
+    };
+
+    // 👉 3. Fetch the user's enrolled shifts and find the next upcoming one
+    const fetchNextShift = async () => {
+      try {
+        const response = await api.get("/appointments/my-appointments");
+        const shifts = response.data;
+
+        if (shifts && shifts.length > 0) {
+          const now = new Date();
+          // Filter out past shifts and sort by the closest date
+          const upcoming = shifts
+            .filter(
+              (shift: Appointment) =>
+                new Date(shift.date) > now && shift.status !== "Completed",
+            )
+            .sort(
+              (a: Appointment, b: Appointment) =>
+                new Date(a.date).getTime() - new Date(b.date).getTime(),
+            );
+
+          if (upcoming.length > 0) {
+            setNextAppointment(upcoming[0]); // Set the absolute closest shift
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching next shift:", error);
+      } finally {
+        setLoadingShift(false);
+      }
+    };
+
+    fetchUserName();
+    fetchNextShift();
+  }, []);
+
+  // 👉 4. Helper to format the MongoDB date into a readable string
+  const formatApptDate = (dateString: string, durationHours: number) => {
+    const d = new Date(dateString);
+    const datePart = d.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const start = d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    const end = new Date(
+      d.getTime() + durationHours * 3600000,
+    ).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return `${datePart} • ${start} - ${end}`;
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+      >
+        {/* --- Header Area --- */}
+        <View className="flex-row items-center justify-between mt-4">
+          <View className="flex-row items-center">
+            <Ionicons name="apps" size={20} color="#2D6A4F" />
+            <Text className="text-xl font-bold text-darkBlue ml-2 dark:text-white">
+              CarePaws
+            </Text>
+          </View>
+          <View className="flex-row items-center">
+            <Ionicons name="location-sharp" size={16} color="#D08C60" />
+            <Text className="text-neutral text-sm ml-1 dark:text-gray-300">
+              Angeles City, Pampanga
+            </Text>
+          </View>
+        </View>
+
+        {/* --- Dynamic Welcome Greeting --- */}
+        <Text className="text-3xl font-bold text-darkBlue mt-8 dark:text-white">
+          Welcome back, {userName}
+        </Text>
+
+        {/* --- Community Impact Section --- */}
+        <View className="mt-8">
+          <Text className="text-lg font-bold text-darkBlue mb-4 dark:text-white">
+            Community Impact
+          </Text>
+          <View className="bg-primary rounded-2xl p-5 dark:bg-emerald-900">
+            <Text className="text-white font-bold text-lg mb-2">
+              Help a Pet in Need
+            </Text>
+            <Text className="text-white/90 text-sm mb-6 leading-5">
+              Shelters in your area are currently at{"\n"}capacity.{"\n"}Your
+              support matters.
+            </Text>
+            <View className="flex-row justify-between">
+              <TouchableOpacity className="flex-1 bg-white dark:bg-emerald-800 py-3 rounded-xl items-center mr-2">
+                <Text className="text-primary dark:text-white font-bold">
+                  Donate
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 border-2 border-white py-3 rounded-xl items-center ml-2"
+                onPress={() => router.push("/appointments")}
+              >
+                <Text className="text-white font-bold">Volunteer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* --- 👉 5. Dynamic Current Appointment Section --- */}
+        <View className="mt-8 mb-8">
+          <Text className="text-lg font-bold text-darkBlue mb-4 dark:text-white">
+            Current Appointment
+          </Text>
+
+          {loadingShift ? (
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 items-center justify-center">
+              <ActivityIndicator color="#2D6A4F" />
+            </View>
+          ) : nextAppointment ? (
+            <TouchableOpacity
+              className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700"
+              onPress={() => router.push("/my-appointments")}
+            >
+              <View className="flex-row justify-between items-center mb-3">
+                <Text className="text-darkBlue dark:text-white font-bold text-base">
+                  {nextAppointment.title}
+                </Text>
+                <Text className="text-primary dark:text-emerald-400 font-bold">
+                  Enrolled
+                </Text>
+              </View>
+              <Text className="text-neutral dark:text-gray-400 text-sm mb-1">
+                {formatApptDate(
+                  nextAppointment.date,
+                  nextAppointment.durationHours,
+                )}
+              </Text>
+              <Text className="text-neutral dark:text-gray-400 text-sm flex-row items-center">
+                Happy Paws Shelter
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-dashed border-gray-300 dark:border-gray-600 items-center">
+              <Ionicons name="calendar-outline" size={32} color="#AAAAAA" />
+              <Text className="text-neutral dark:text-gray-400 text-center mt-3 font-medium">
+                You have no upcoming shifts.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push("/appointments")}
+                className="mt-3"
+              >
+                <Text className="text-primary font-bold">Find a shift</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
