@@ -1,11 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter, useSegments } from "expo-router";
+import * as SecureStore from 'expo-secure-store';
+import { useRouter, useSegments, useRootNavigationState } from "expo-router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-// Create the context
 const AuthContext = createContext<any>(null);
 
-// Custom hook to use the auth context easily
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -15,12 +13,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
 
-  // 1. Check for the token when the app first loads
   useEffect(() => {
     const loadToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("userToken");
+        const token = await SecureStore.getItemAsync("userToken");
         setUserToken(token);
       } catch (error) {
         console.error("Error loading token:", error);
@@ -31,26 +29,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadToken();
   }, []);
 
-  // 2. Route the user based on whether they have a token
   useEffect(() => {
-    if (isLoading) return; // Don't do anything while checking storage
+    if (isLoading) return;
+    if (!rootNavigationState?.key) return;
 
-    // Check if the user is currently in the (auth) group
+    // 👉 1. Check where the user currently is
     const inAuthGroup = segments[0] === "(auth)";
+    const isAtRoot = !segments[0]; // Are they just opening the app?
 
-    if (userToken && inAuthGroup) {
-      // If they are logged in but trying to view the login screen, send them Home
+    // 👉 2. Route them safely
+    if (userToken && (inAuthGroup || isAtRoot)) {
+      // If logged in AND at the login screen OR starting the app -> Send Home
       router.replace("/(tabs)");
     } else if (!userToken && !inAuthGroup) {
-      // If they are NOT logged in but trying to view the tabs, send them to Login
+      // If NOT logged in AND trying to view protected screens -> Send to Login
       router.replace("/(auth)/logIn");
     }
-  }, [userToken, segments, isLoading]);
+  }, [userToken, segments, isLoading, rootNavigationState, router]);
 
-  // 3. Create a real Logout function
   const logout = async () => {
-    await AsyncStorage.removeItem("userToken");
-    await AsyncStorage.removeItem("userName");
+    await SecureStore.deleteItemAsync("userToken");
+    await SecureStore.deleteItemAsync("userName");
     setUserToken(null);
     router.replace("/(auth)/logIn");
   };

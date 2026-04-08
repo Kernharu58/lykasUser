@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppointmentCard from "../../components/AppointmentCard";
-import api from "../utils/api";
+import api from "../../utils/api";
 
 interface Appointment {
   _id: string;
@@ -24,21 +24,29 @@ interface Appointment {
 export default function Appointments() {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [volunteerHours, setVolunteerHours] = useState(0); // 👉 1. New State for hours
   const [loading, setLoading] = useState(true);
 
-  const fetchAppointments = async () => {
+  const fetchData = async () => {
     try {
-      const response = await api.get("/appointments");
-      setAppointments(response.data);
+      // 👉 2. Fetch both the shifts AND the user profile simultaneously using Promise.all
+      const [apptResponse, userResponse] = await Promise.all([
+        api.get("/appointments"),
+        api.get("/auth/me")
+      ]);
+      
+      setAppointments(apptResponse.data);
+      // Fallback to 0 if the user doesn't have any recorded hours yet
+      setVolunteerHours(userResponse.data.volunteerHours || 0); 
     } catch (error) {
-      console.error("Error fetching appointments:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAppointments();
+    fetchData();
   }, []);
 
   const formatAppointmentDate = (dateString: string, durationHours: number) => {
@@ -85,10 +93,15 @@ export default function Appointments() {
         {/* Your Impact Card */}
         <View className="bg-primary dark:bg-emerald-900 rounded-2xl p-5 mb-8 shadow-sm">
           <Text className="text-white font-bold text-lg mb-1">Your Impact</Text>
-          <Text className="text-white/80 text-sm mb-4">This Month</Text>
+          <Text className="text-white/80 text-sm mb-4">Total Volunteered</Text>
           <View className="flex-row items-baseline">
-            <Text className="text-warnBrown font-bold text-4xl mr-2">12</Text>
-            <Text className="text-white font-medium text-lg">Hours</Text>
+            {/* 👉 3. Render the dynamic variable here! */}
+            <Text className="text-warnBrown font-bold text-4xl mr-2">
+              {volunteerHours}
+            </Text>
+            <Text className="text-white font-medium text-lg">
+              {volunteerHours === 1 ? "Hour" : "Hours"}
+            </Text>
           </View>
         </View>
 
@@ -102,13 +115,12 @@ export default function Appointments() {
             <Text className="text-neutral mt-4">Loading shifts...</Text>
           </View>
         ) : appointments.length > 0 ? (
-          appointments.map((shift) => (
+          appointments.map((shift, index) => (
             <AppointmentCard
-              key={shift._id}
+              key={shift._id || index.toString()} 
               title={shift.title}
               date={formatAppointmentDate(shift.date, shift.durationHours)}
               status={shift.status}
-              // 👉 IMPORTANT CHANGE: Push to the new application form!
               onPress={() => router.push(`/appointments/apply/${shift._id}`)}
             />
           ))

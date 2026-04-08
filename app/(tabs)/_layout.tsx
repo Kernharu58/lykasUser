@@ -11,6 +11,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: isDark ? "#4ade80" : "#2D6A4F",
         tabBarInactiveTintColor: isDark ? "#6b7280" : "#AAAAAA",
         headerShown: false,
@@ -70,6 +71,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "paw" : "paw-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
               size={24}
               color={color}
             />

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppointmentCard from "../components/AppointmentCard";
-import api from "./utils/api";
+import api from "../utils/api";
 
 export default function MyAppointments() {
   const router = useRouter();

@@ -7,6 +7,7 @@ interface PetCardProps {
   name: string;
   breed: string;
   image: string;
+  status?: string;
 }
 
 export default function PetCard({ id, name, breed, image }: PetCardProps) {
@@ -28,7 +29,7 @@ export default function PetCard({ id, name, breed, image }: PetCardProps) {
       {/* flex-1 ensures the text takes up available space, pushing the button to the bottom */}
       <View className="flex-1 mb-3 px-1  ">
         <Text
-          className="text-darkBlue font-extrabold text-lg"
+          className="text-darkBlue font-extrabold text-lg dark:text-white"
           numberOfLines={1} // Prevents long names from breaking the layout
         >
           {name}

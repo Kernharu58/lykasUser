@@ -1,7 +1,8 @@
-import { Ionicons } from "@expo/vector-icons"; // 👉 Added Ionicons
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
+import * as SecureStore from 'expo-secure-store';
+import * as Google from "expo-auth-session/providers/google"; 
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import {
   ActivityIndicator,
   Alert,
@@ -13,15 +14,57 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "./../utils/api";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../utils/api";
+import * as WebBrowser from "expo-web-browser";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LogIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👉 Added state for toggling password
+  const [showPassword, setShowPassword] = useState(false);
 
+  const { isLoading, userToken, setUserToken } = useAuth();
+
+  // 👉 1. Google Auth Hook (Strictly Web Client ID only!)
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: "26128745469-5umamh3gclq3il3r7sc0goc89g4sinjm.apps.googleusercontent.com",
+    androidClientId: "26128745469-umpa59h7c4gcrhki8im33a3jjcc2onqb.apps.googleusercontent.com",
+    // 👉 2. Force an HTTPS redirect to bypass Google's block!
+  
+   
+  });
+  // 👉 2. Google Auth Listener
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      handleGoogleBackendLogin(id_token);
+    }
+  }, [response]);
+
+  // 👉 3. Google Backend Function 
+  const handleGoogleBackendLogin = async (idToken: string) => {
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/google", { idToken });
+
+      await SecureStore.setItemAsync("userToken", res.data.token);
+      await SecureStore.setItemAsync("userName", res.data.user.displayName);
+      setUserToken(res.data.token);
+
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Could not log in with Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 👉 4. Standard Email/Password Login Function
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter your email and password.");
@@ -35,9 +78,9 @@ export default function LogIn() {
         password,
       });
 
-      await AsyncStorage.setItem("userToken", response.data.token);
-      await AsyncStorage.setItem("userName", response.data.user.displayName);
-
+      await SecureStore.setItemAsync("userToken", response.data.token);
+      await SecureStore.setItemAsync("userName", response.data.user.displayName);
+      setUserToken(response.data.token);
       router.replace("/(tabs)");
     } catch (error: any) {
       const message = error.response?.data?.message || "Invalid credentials.";
@@ -46,6 +89,14 @@ export default function LogIn() {
       setLoading(false);
     }
   };
+
+  if (isLoading || userToken) {
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#2D6A4F" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -78,7 +129,6 @@ export default function LogIn() {
             autoCapitalize="none"
           />
 
-          {/* 👉 Wrapped Password Input for Eye Icon */}
           <View className="relative justify-center">
             <TextInput
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 pr-12 text-darkBlue font-medium"
@@ -86,7 +136,7 @@ export default function LogIn() {
               placeholderTextColor="#AAAAAA"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry={!showPassword} // 👉 Toggles based on state
+              secureTextEntry={!showPassword}
             />
             <TouchableOpacity
               className="absolute right-4"
@@ -128,7 +178,11 @@ export default function LogIn() {
         </View>
 
         {/* --- Social Login --- */}
-        <TouchableOpacity className="w-full bg-white border border-gray-200 py-4 rounded-xl flex-row justify-center items-center shadow-sm">
+        <TouchableOpacity 
+          className="w-full bg-white border border-gray-200 py-4 rounded-xl flex-row justify-center items-center shadow-sm"
+          onPress={() => promptAsync()} 
+          disabled={!request || loading}
+        >
           <Text className="text-green-500 font-bold text-lg mr-2">G</Text>
           <Text className="text-darkBlue font-bold text-base">Google</Text>
         </TouchableOpacity>

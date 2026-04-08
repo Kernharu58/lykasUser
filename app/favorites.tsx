@@ -10,13 +10,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../components/PetCard";
-import api from "./utils/api";
+import api from "../utils/api";
 
 interface Pet {
   _id: string;
   name: string;
   breed: string;
   imageUrl: string;
+  status: string;
 }
 
 export default function Favorites() {
@@ -74,6 +75,7 @@ export default function Favorites() {
                 name={pet.name}
                 breed={pet.breed}
                 image={pet.imageUrl}
+                status={pet.status}
               />
             ))}
           </View>

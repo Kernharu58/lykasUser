@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "./../utils/api";
+import api from "../../utils/api";
 
 interface Pet {
   _id: string;

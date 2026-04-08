@@ -1,7 +1,8 @@
 import { Stack } from "expo-router";
 import React from "react";
-import { AuthProvider } from "./context/AuthContext";
-import "./globals.css"; // Required for NativeWind v4 to apply styles
+import { AuthProvider } from "../context/AuthContext";
+import "./globals.css";
+
 export default function RootLayout() {
   return (
     <AuthProvider>
@@ -13,6 +14,9 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
         <Stack.Screen name="favorites" />
         <Stack.Screen name="my-pets" />
+        
+        {/* 👉 Add this line right here! */}
+        <Stack.Screen name="donate" options={{ presentation: "modal" }} /> 
       </Stack>
     </AuthProvider>
   );

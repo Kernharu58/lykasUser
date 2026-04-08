@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   Switch,
   Text,
@@ -12,43 +15,104 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../utils/api"; // 👉 Added missing API import
 
 export default function Settings() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  
+  // 👉 Moved these INSIDE the component where they belong!
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
   const { logout } = useAuth();
 
   // 👉 1. Theme Logic
   const { colorScheme, setColorScheme } = useColorScheme();
   const isDarkMode = colorScheme === "dark";
 
-  const toggleDarkMode = (value: boolean) => {
-    setColorScheme(value ? "dark" : "light");
+  const toggleDarkMode = async (value: boolean) => {
+    const newTheme = value ? "dark" : "light";
+    setColorScheme(newTheme);
+    await AsyncStorage.setItem("appTheme", newTheme); 
   };
 
-  useEffect(() => {
-    // 👉 2. Force start at Light Mode if no preference is saved
-    if (!colorScheme) {
-      setColorScheme("light");
-    }
-
-    const fetchUserName = async () => {
+ useEffect(() => {
+    // 👉 Load the saved theme when the screen opens
+    const loadTheme = async () => {
+      const savedTheme = await AsyncStorage.getItem("appTheme");
+      if (savedTheme) {
+        setColorScheme(savedTheme as "light" | "dark");
+      } else if (!colorScheme) {
+        setColorScheme("light");
+      }
+    };
+    
+    const fetchUserProfile = async () => {
       try {
-        const savedName = await AsyncStorage.getItem("userName");
-        if (savedName) {
-          setDisplayName(savedName);
-        } else {
-          setDisplayName("Guest");
+        const response = await api.get("/auth/me");
+        setDisplayName(response.data.displayName);
+        if (response.data.profilePicture) {
+          setProfilePicture(response.data.profilePicture);
         }
       } catch (error) {
-        console.error("Error loading user name:", error);
+        console.error("Error fetching user profile:", error);
       }
     };
 
-    fetchUserName();
+    loadTheme();
+    fetchUserProfile();
   }, []);
+
+  const pickImage = async () => {
+    // Request permission (mostly required for iOS)
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Required", "You need to allow access to your photos.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true, // Lets them crop it to a square!
+      aspect: [1, 1],
+      quality: 0.7, // Compress it slightly for faster uploads
+    });
+
+    if (!result.canceled) {
+      handleUploadImage(result.assets[0].uri);
+    }
+  };
+
+  const handleUploadImage = async (uri: string) => {
+    setUploadingImage(true);
+    try {
+      // React Native requires a very specific FormData format for file uploads
+      const formData = new FormData();
+      const filename = uri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename || "");
+      const type = match ? `image/${match[1]}` : `image`;
+
+      // TypeScript might complain about this 'any' cast, but it is necessary for React Native FormData
+      formData.append("image", { uri, name: filename, type } as any);
+
+      // Send it using multipart/form-data
+      const response = await api.post("/auth/profile-picture", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      // Update the UI immediately with the new Cloudinary URL!
+      setProfilePicture(response.data.profilePicture);
+      Alert.alert("Success", "Profile picture updated!");
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Upload Failed", "Could not upload the image.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -57,12 +121,12 @@ export default function Settings() {
       [
         {
           text: "Cancel",
-          style: "cancel", // Makes it look like a safe "cancel" action
+          style: "cancel", 
         },
         {
           text: "Yes",
-          style: "destructive", // Makes the text red on iOS
-          onPress: logout, // Calls your actual logout function from AuthContext
+          style: "destructive", 
+          onPress: logout, 
         },
       ],
       { cancelable: true },
@@ -94,12 +158,31 @@ export default function Settings() {
         {/* --- 1. Avatar & User Info --- */}
         <View className="items-center mb-10 mt-2">
           <View className="relative">
-            <View className="w-24 h-24 bg-primary rounded-full items-center justify-center mb-4 shadow-sm">
-              <Text className="text-white text-4xl font-bold">
-                {displayName ? displayName.charAt(0).toUpperCase() : "?"}
-              </Text>
-            </View>
-            <TouchableOpacity className="absolute bottom-4 right-0 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md border border-gray-100 dark:border-gray-600">
+            {/* 👉 Added the new interactive Avatar button! */}
+            <TouchableOpacity 
+              className="w-24 h-24 bg-primary rounded-full items-center justify-center mb-4 shadow-sm overflow-hidden border-2 border-white dark:border-gray-800"
+              onPress={pickImage} 
+              disabled={uploadingImage}
+            >
+              {uploadingImage ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : profilePicture ? (
+                <Image 
+                  source={{ uri: profilePicture }} 
+                  className="w-full h-full" 
+                  resizeMode="cover" 
+                />
+              ) : (
+                <Text className="text-white text-4xl font-bold">
+                  {displayName ? displayName.charAt(0).toUpperCase() : "?"}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="absolute bottom-4 right-0 bg-white dark:bg-gray-700 p-2 rounded-full shadow-md border border-gray-100 dark:border-gray-600"
+              onPress={pickImage} // 👉 Triggers the camera roll!
+            >
               <Ionicons name="camera" size={16} color="#2D6A4F" />
             </TouchableOpacity>
           </View>
@@ -130,7 +213,7 @@ export default function Settings() {
 
           <TouchableOpacity
             className="flex-row items-center justify-between p-3 border-b border-gray-50 dark:border-gray-700"
-            onPress={() => router.push("../favorites")} // 👉 Navigate to Favorites
+            onPress={() => router.push("../favorites")} 
           >
             <View className="flex-row items-center">
               <View className="w-10 h-10 rounded-full bg-red-50 dark:bg-gray-700 items-center justify-center">
@@ -145,7 +228,7 @@ export default function Settings() {
 
           <TouchableOpacity
             className="flex-row items-center justify-between p-3"
-            onPress={() => router.push("/my-pets")} // 👉 Absolute path fixed
+            onPress={() => router.push("/my-pets")}
           >
             <View className="flex-row items-center">
               <View className="w-10 h-10 rounded-full bg-[#fcf3ed] dark:bg-gray-700 items-center justify-center">

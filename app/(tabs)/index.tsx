@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
@@ -11,7 +11,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../utils/api"; // 👉 1. Import your API
+import api from "../../utils/api"; // 👉 1. Import your API
+
 
 // 👉 2. Define the TypeScript interface
 interface Appointment {
@@ -30,16 +31,14 @@ export default function Home() {
   ); // 👉 State for dynamic shift
   const [loadingShift, setLoadingShift] = useState(true);
 
-  const { colorScheme, setColorScheme } = useColorScheme();
-
+ 
   useEffect(() => {
-    if (colorScheme) {
-      setColorScheme("light");
-    }
+
+    
     // Fetch the saved name
     const fetchUserName = async () => {
       try {
-        const savedName = await AsyncStorage.getItem("userName");
+        const savedName = await SecureStore.getItemAsync("userName");
         if (savedName) setUserName(savedName.split(" ")[0]);
       } catch (error) {
         console.error("Error loading user name:", error);
@@ -138,7 +137,8 @@ export default function Home() {
               support matters.
             </Text>
             <View className="flex-row justify-between">
-              <TouchableOpacity className="flex-1 bg-white dark:bg-emerald-800 py-3 rounded-xl items-center mr-2">
+              <TouchableOpacity className="flex-1 bg-white dark:bg-emerald-800 py-3 rounded-xl items-center mr-2"
+              onPress={() => router.push("/donate")}>
                 <Text className="text-primary dark:text-white font-bold">
                   Donate
                 </Text>
