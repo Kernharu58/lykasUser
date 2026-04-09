@@ -12,32 +12,36 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import api from "../../utils/api";
 
 // Import your custom components
 import ChatMessage from "../../components/ChatMessage";
 import TypingIndicator from "../../components/TypingIndicator";
+import { useAuth } from "../../context/AuthContext"; // 👉 IMPORT AUTH
 
-const socket = io("https://risky-allie-farcically.ngrok-free.dev");
+// 👉 Dynamically get URL from api.ts
+const SOCKET_URL = api.defaults.baseURL?.replace("/api", "") || "http://localhost:5000";
+
 // Quick Replies Data
 const QUICK_REPLIES = [
   { label: "📅 Schedule a visit", text: "I'd like to schedule a visit." },
   { label: "💰 Adoption fees?", text: "What are the adoption fees?" },
   { label: "🐶 See all dogs", text: "Can I see all available dogs?" },
 ];
-// TypeScript interface for messages (optional, but recommended)
+
 export default function ChatScreen() {
+  const { user } = useAuth(); // 👉 GET LOGGED IN USER
 
   // State variables
   const [messages, setMessages] = useState<any[]>([]);
-  // 👇 FIX: Added state for input text and typing indicator!
   const [inputText, setInputText] = useState("");
-  // 👇 FIX: Added state and refs for keyboard handling and auto-scrolling!
   const [isTyping, setIsTyping] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  
+  const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   // Listen for Keyboard Open/Close
   useEffect(() => {
@@ -49,14 +53,20 @@ export default function ChatScreen() {
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => setKeyboardVisible(false)
     );
-    return () => { show.remove(); hide.remove(); };
+    return () => {
+      show.remove();
+      hide.remove();
+    };
   }, []);
 
-  // Fetch History & Socket Listener
+  // Fetch History & Socket Listener for THIS USER
   useEffect(() => {
+    if (!user) return;
+
+    // 1. Fetch history specific to the user
     const fetchHistory = async () => {
       try {
-        const response = await api.get("/messages");
+        const response = await api.get(`/messages/${user._id}`);
         setMessages(response.data);
       } catch (error) {
         console.error("Could not fetch messages:", error);
@@ -64,31 +74,45 @@ export default function ChatScreen() {
     };
     fetchHistory();
 
-    socket.on("receiveMessage", (newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
+    // 2. Connect Socket
+    socketRef.current = io(SOCKET_URL);
+
+    socketRef.current.on("connect", () => {
+      // 3. Join a Private Room using User ID
+      socketRef.current?.emit("joinRoom", user._id);
     });
 
-    return () => { socket.off("receiveMessage"); };
-  }, []);
+    socketRef.current.on("receiveMessage", (newMessage) => {
+      setMessages((prev) => [...prev, newMessage]);
+      setIsTyping(false); // Stop typing indicator if shelter replies
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, [user]);
 
   // Send Message Logic
   const sendMessage = (overrideText?: string) => {
     const text = (overrideText ?? inputText).trim();
-    if (!text) return;
+    if (!text || !user || !socketRef.current) return;
 
     const messageData = {
+      userId: user._id, // 👉 MUST INCLUDE USER ID
       text,
       sender: "user",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    socket.emit("sendMessage", messageData);
+    socketRef.current.emit("sendMessage", messageData);
     
+    // Optimistically update UI
+    setMessages((prev) => [...prev, messageData]);
     setInputText("");
 
-    // Simulate shelter typing then responding
+    // Simulate shelter typing for realism (optional)
     setIsTyping(true);
-    setTimeout(() => setIsTyping(false), 2000);
+    setTimeout(() => setIsTyping(false), 3000); 
   };
 
   const hasText = inputText.trim().length > 0;
@@ -126,32 +150,31 @@ export default function ChatScreen() {
           className="flex-1 bg-gray-100 dark:bg-gray-900"
           data={messages}
           keyExtractor={(item, index) => item._id || index.toString()}
-          renderItem={({ item }) => <ChatMessage item={item} />} 
+          renderItem={({ item }) => <ChatMessage item={item} />}
           contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          ListFooterComponent={isTyping ? <TypingIndicator /> : null} 
+          ListFooterComponent={isTyping ? <TypingIndicator /> : null}
         />
 
-        {/* 👇 FIX: Grouped the Quick Replies and Input Box into a single solid footer container! */}
-        <View 
+        {/* --- Footer Area --- */}
+        <View
           className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
           style={{ paddingBottom: isKeyboardVisible ? 380 : 130 }}
         >
-          
-          {/* --- Quick Replies --- */}
+          {/* Quick Replies */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             className="max-h-14 bg-gray-100 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
-            contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center' }}
+            contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8, alignItems: "center" }}
           >
             {QUICK_REPLIES.map((qr, index) => (
               <TouchableOpacity
                 key={qr.text}
                 onPress={() => sendMessage(qr.text)}
                 className={`bg-white dark:bg-gray-800 border border-emerald-600/50 rounded-full px-4 py-2 self-center ${
-                  index !== QUICK_REPLIES.length - 1 ? 'mr-2' : ''
+                  index !== QUICK_REPLIES.length - 1 ? "mr-2" : ""
                 }`}
               >
                 <Text className="text-emerald-700 dark:text-emerald-400 text-xs font-bold">
@@ -161,15 +184,14 @@ export default function ChatScreen() {
             ))}
           </ScrollView>
 
-          {/* --- Input Area --- */}
+          {/* Input Area */}
           <View className="flex-row items-end px-3 pt-2 pb-1">
             <TouchableOpacity className="mb-1 mr-2 p-1">
               <Ionicons name="add-circle" size={26} color="#059669" />
             </TouchableOpacity>
-            
+
             <TextInput
               ref={inputRef}
-              // 👇 FIX: Changed color back to text-darkBlue so your typing is visible!
               className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2.5 text-darkBlue dark:text-white mr-2 text-base"
               placeholder="Message..."
               placeholderTextColor="#9ca3af"
@@ -178,7 +200,7 @@ export default function ChatScreen() {
               multiline
               style={{ maxHeight: 100 }}
             />
-            
+
             <TouchableOpacity
               className={`w-10 h-10 rounded-full items-center justify-center mb-0.5 ${
                 hasText ? "bg-emerald-700" : "bg-gray-200 dark:bg-gray-700"
@@ -187,11 +209,15 @@ export default function ChatScreen() {
               disabled={!hasText}
               activeOpacity={0.75}
             >
-              <Ionicons name="send" size={17} color={hasText ? "#ffffff" : "#9ca3af"} style={{ marginLeft: 2 }} />
+              <Ionicons
+                name="send"
+                size={17}
+                color={hasText ? "#ffffff" : "#9ca3af"}
+                style={{ marginLeft: 2 }}
+              />
             </TouchableOpacity>
           </View>
         </View>
-
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
