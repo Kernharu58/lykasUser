@@ -15,15 +15,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { io, Socket } from "socket.io-client";
 import api from "../../utils/api";
 
-// Import your custom components
+// Custom Components & Context
 import ChatMessage from "../../components/ChatMessage";
 import TypingIndicator from "../../components/TypingIndicator";
-import { useAuth } from "../../context/AuthContext"; // 👉 IMPORT AUTH
+import { useAuth } from "../../context/AuthContext";
 
-// 👉 Dynamically get URL from api.ts
+// 👉 Dynamically grab the Ngrok URL from your api settings
 const SOCKET_URL = api.defaults.baseURL?.replace("/api", "") || "http://localhost:5000";
 
-// Quick Replies Data
 const QUICK_REPLIES = [
   { label: "📅 Schedule a visit", text: "I'd like to schedule a visit." },
   { label: "💰 Adoption fees?", text: "What are the adoption fees?" },
@@ -31,9 +30,8 @@ const QUICK_REPLIES = [
 ];
 
 export default function ChatScreen() {
-  const { user } = useAuth(); // 👉 GET LOGGED IN USER
+  const { user } = useAuth(); // 👉 Get the logged-in user!
 
-  // State variables
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -43,7 +41,7 @@ export default function ChatScreen() {
   const inputRef = useRef<TextInput>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Listen for Keyboard Open/Close
+  // Handle Keyboard padding
   useEffect(() => {
     const show = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
@@ -59,11 +57,11 @@ export default function ChatScreen() {
     };
   }, []);
 
-  // Fetch History & Socket Listener for THIS USER
+  // 👉 Fetch Private History & Connect Socket
   useEffect(() => {
-    if (!user) return;
+    if (!user) return; // Wait until user is loaded
 
-    // 1. Fetch history specific to the user
+    // 1. Fetch ONLY this user's messages
     const fetchHistory = async () => {
       try {
         const response = await api.get(`/messages/${user._id}`);
@@ -74,14 +72,17 @@ export default function ChatScreen() {
     };
     fetchHistory();
 
-    // 2. Connect Socket
-    socketRef.current = io(SOCKET_URL);
+    // 2. Connect to Socket.io
+    socketRef.current = io(SOCKET_URL, {
+      transports: ['websocket', 'polling']
+    });
 
     socketRef.current.on("connect", () => {
-      // 3. Join a Private Room using User ID
+      // 3. Join a PRIVATE room using the user's ID
       socketRef.current?.emit("joinRoom", user._id);
     });
 
+    // 4. Listen for incoming messages from the Shelter
     socketRef.current.on("receiveMessage", (newMessage) => {
       setMessages((prev) => [...prev, newMessage]);
       setIsTyping(false); // Stop typing indicator if shelter replies
@@ -92,25 +93,27 @@ export default function ChatScreen() {
     };
   }, [user]);
 
-  // Send Message Logic
+  // 👉 Send Message Logic
   const sendMessage = (overrideText?: string) => {
     const text = (overrideText ?? inputText).trim();
     if (!text || !user || !socketRef.current) return;
 
+    // Attach the userId so the backend knows whose room to put this in
     const messageData = {
-      userId: user._id, // 👉 MUST INCLUDE USER ID
+      userId: user._id, 
       text,
       sender: "user",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
+    // Emit to backend
     socketRef.current.emit("sendMessage", messageData);
     
-    // Optimistically update UI
+    // Instantly show the message on the user's screen
     setMessages((prev) => [...prev, messageData]);
     setInputText("");
 
-    // Simulate shelter typing for realism (optional)
+    // Optional: Simulate the shelter typing an automated response delay
     setIsTyping(true);
     setTimeout(() => setIsTyping(false), 3000); 
   };
@@ -119,7 +122,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 dark:bg-gray-900" edges={["top"]}>
-      {/* --- Header --- */}
+      {/* Header */}
       <View className="bg-emerald-900 dark:bg-emerald-950 px-5 pt-3 pb-4">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center">
@@ -144,7 +147,7 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
-        {/* --- Messages List --- */}
+        {/* Chat History */}
         <FlatList
           ref={flatListRef}
           className="flex-1 bg-gray-100 dark:bg-gray-900"
@@ -157,7 +160,7 @@ export default function ChatScreen() {
           ListFooterComponent={isTyping ? <TypingIndicator /> : null}
         />
 
-        {/* --- Footer Area --- */}
+        {/* Input & Quick Replies Footer */}
         <View
           className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
           style={{ paddingBottom: isKeyboardVisible ? 380 : 130 }}
@@ -184,7 +187,7 @@ export default function ChatScreen() {
             ))}
           </ScrollView>
 
-          {/* Input Area */}
+          {/* Text Input */}
           <View className="flex-row items-end px-3 pt-2 pb-1">
             <TouchableOpacity className="mb-1 mr-2 p-1">
               <Ionicons name="add-circle" size={26} color="#059669" />
