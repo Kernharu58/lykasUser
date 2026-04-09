@@ -10,39 +10,44 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userToken, setUserToken] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null); // 👉 ADDED: State to hold the actual user object
   const [isLoading, setIsLoading] = useState(true);
+  
   const segments = useSegments();
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
-    const loadToken = async () => {
+    const loadTokenAndUser = async () => {
       try {
         const token = await SecureStore.getItemAsync("userToken");
+        const userDataString = await SecureStore.getItemAsync("userData"); // 👉 Fetch saved user data
+
         setUserToken(token);
+        if (userDataString) {
+          setUser(JSON.parse(userDataString)); // 👉 Parse and set user
+        }
       } catch (error) {
-        console.error("Error loading token:", error);
+        console.error("Error loading auth data:", error);
       } finally {
         setIsLoading(false);
       }
     };
-    loadToken();
+    loadTokenAndUser();
   }, []);
 
   useEffect(() => {
     if (isLoading) return;
     if (!rootNavigationState?.key) return;
 
-    // 👉 1. Check where the user currently is
+    // 1. Check where the user currently is
     const inAuthGroup = segments[0] === "(auth)";
-    const isAtRoot = !segments[0]; // Are they just opening the app?
+    const isAtRoot = !segments[0]; 
 
-    // 👉 2. Route them safely
+    // 2. Route them safely
     if (userToken && (inAuthGroup || isAtRoot)) {
-      // If logged in AND at the login screen OR starting the app -> Send Home
       router.replace("/(tabs)");
     } else if (!userToken && !inAuthGroup) {
-      // If NOT logged in AND trying to view protected screens -> Send to Login
       router.replace("/(auth)/logIn");
     }
   }, [userToken, segments, isLoading, rootNavigationState, router]);
@@ -50,13 +55,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     await SecureStore.deleteItemAsync("userToken");
     await SecureStore.deleteItemAsync("userName");
+    await SecureStore.deleteItemAsync("userData"); // 👉 Clear user data on logout
     setUserToken(null);
+    setUser(null); // 👉 Clear state
     router.replace("/(auth)/logIn");
   };
 
   return (
     <AuthContext.Provider
-      value={{ userToken, setUserToken, logout, isLoading }}
+      // 👉 Export `user` and `setUser` so ChatScreen and LogIn can access them
+      value={{ userToken, setUserToken, user, setUser, logout, isLoading }}
     >
       {children}
     </AuthContext.Provider>

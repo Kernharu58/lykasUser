@@ -10,6 +10,7 @@ import {
   View,
   Keyboard,
   ScrollView,
+  Alert
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { io, Socket } from "socket.io-client";
@@ -31,6 +32,8 @@ const QUICK_REPLIES = [
 
 export default function ChatScreen() {
   const { user } = useAuth(); // 👉 Get the logged-in user!
+
+  const userId = user?._id || user?.id;
 
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
@@ -59,12 +62,12 @@ export default function ChatScreen() {
 
   // 👉 Fetch Private History & Connect Socket
   useEffect(() => {
-    if (!user) return; // Wait until user is loaded
+    if (!userId) return; // Wait until user ID is verified
 
-    // 1. Fetch ONLY this user's messages
+    // 1. Fetch Chat History
     const fetchHistory = async () => {
       try {
-        const response = await api.get(`/messages/${user._id}`);
+        const response = await api.get(`/messages/${userId}`);
         setMessages(response.data);
       } catch (error) {
         console.error("Could not fetch messages:", error);
@@ -79,43 +82,67 @@ export default function ChatScreen() {
 
     socketRef.current.on("connect", () => {
       // 3. Join a PRIVATE room using the user's ID
-      socketRef.current?.emit("joinRoom", user._id);
+      socketRef.current?.emit("joinRoom", userId);
     });
 
-    // 4. Listen for incoming messages from the Shelter
+    // 4. Listen for incoming messages (and deduplicate)
     socketRef.current.on("receiveMessage", (newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) => {
+        // Find if this is a message we already optimistically added to the screen
+        const existingIndex = prev.findIndex(
+          msg => msg.text === newMessage.text && msg.time === newMessage.time && msg.sender === newMessage.sender
+        );
+
+        if (existingIndex !== -1) {
+          // Silent Swap: Replace the local message with the real Database message
+          const newArray = [...prev];
+          newArray[existingIndex] = newMessage;
+          return newArray;
+        }
+
+        // If it's a brand new message (e.g. from the shelter), add it
+        return [...prev, newMessage];
+      });
       setIsTyping(false); // Stop typing indicator if shelter replies
     });
 
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [user]);
+  }, [userId]);
 
   // 👉 Send Message Logic
   const sendMessage = (overrideText?: string) => {
     const text = (overrideText ?? inputText).trim();
-    if (!text || !user || !socketRef.current) return;
+    
+    if (!userId) {
+      Alert.alert("Session Error", "Could not verify your account. Please log out and log back in.");
+      return;
+    }
+    
+    if (!text || !socketRef.current) return;
 
-    // Attach the userId so the backend knows whose room to put this in
-    const messageData = {
-      userId: user._id, 
-      text,
+    // Data for the backend server (NO local ID)
+    const messageDataForServer = {
+      userId: userId, 
+      text: text,
       sender: "user",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    // Emit to backend
-    socketRef.current.emit("sendMessage", messageData);
-    
-    // Instantly show the message on the user's screen
-    setMessages((prev) => [...prev, messageData]);
+    // Data for the UI (Includes a fake local ID so FlatList doesn't crash)
+    const optimisticMessage = {
+      ...messageDataForServer,
+      _id: "local_" + Date.now().toString(), 
+    };
+
+    // 👉 1. INSTANT UI UPDATE: Show it on screen immediately!
+    setMessages((prev) => [...prev, optimisticMessage]);
     setInputText("");
 
-    // Optional: Simulate the shelter typing an automated response delay
-    setIsTyping(true);
-    setTimeout(() => setIsTyping(false), 3000); 
+    // 👉 2. SERVER SYNC: Forcefully rejoin room and send the data
+    socketRef.current.emit("joinRoom", userId); 
+    socketRef.current.emit("sendMessage", messageDataForServer);
   };
 
   const hasText = inputText.trim().length > 0;

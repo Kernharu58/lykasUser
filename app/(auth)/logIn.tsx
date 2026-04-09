@@ -27,7 +27,8 @@ export default function LogIn() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { isLoading, userToken, setUserToken } = useAuth();
+// Change this line:
+const { isLoading, userToken, setUserToken, setUser } = useAuth(); // 👉 ADD setUser
 
   // 👉 1. Google Auth Hook (Strictly Web Client ID only!)
   const [request, response, promptAsync] = Google.useAuthRequest({
@@ -53,6 +54,10 @@ export default function LogIn() {
 
       await SecureStore.setItemAsync("userToken", res.data.token);
       await SecureStore.setItemAsync("userName", res.data.user.displayName);
+
+      await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user)); 
+      setUser(res.data.user);
+
       setUserToken(res.data.token);
 
       router.replace("/(tabs)");
@@ -80,6 +85,10 @@ export default function LogIn() {
 
       await SecureStore.setItemAsync("userToken", response.data.token);
       await SecureStore.setItemAsync("userName", response.data.user.displayName);
+
+      await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user)); 
+      setUser(response.data.user);
+
       setUserToken(response.data.token);
       router.replace("/(tabs)");
     } catch (error: any) {
