@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+// 👉 1. Import useFocusEffect and useCallback
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useState, useCallback } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -29,7 +31,6 @@ export default function Adopt() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // 👉 1. New State for Search & Auto-Recommend
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -37,8 +38,13 @@ export default function Adopt() {
   const fetchPets = async () => {
     try {
       const response = await api.get("/pets");
-      setPets(response.data);
-      setFilteredPets(response.data); // 👉 Initialize our filtered list with all pets
+      
+      // 👉 2. STRICT FILTER: Completely remove "Adopted" pets from the array 
+      // just in case the backend accidentally sends them.
+      const availablePets = response.data.filter((pet: Pet) => pet.status !== "Adopted");
+
+      setPets(availablePets);
+      setFilteredPets(availablePets); 
     } catch (error) {
       console.error("Error fetching pets:", error);
     } finally {
@@ -47,18 +53,21 @@ export default function Adopt() {
     }
   };
 
-  useEffect(() => {
-    fetchPets();
-  }, []);
+  // 👉 3. Replace useEffect with useFocusEffect! 
+  // This automatically refreshes the pet list EVERY time you open this tab.
+  useFocusEffect(
+    useCallback(() => {
+      fetchPets();
+    }, [])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
-    setSearchQuery(""); // 👉 Clear search on pull-to-refresh
+    setSearchQuery(""); 
     setShowSuggestions(false);
     fetchPets();
   };
 
-  // 👉 2. Search Logic (Runs every time you type a letter)
   const handleSearch = (text: string) => {
     setSearchQuery(text);
 
@@ -66,7 +75,6 @@ export default function Adopt() {
       setShowSuggestions(true);
       const lowerCaseText = text.toLowerCase();
       
-      // Filter pets by checking if the name OR breed includes the search text
       const filtered = pets.filter(
         (pet) =>
           pet.name.toLowerCase().includes(lowerCaseText) ||
@@ -74,21 +82,18 @@ export default function Adopt() {
       );
       setFilteredPets(filtered);
     } else {
-      // If search is empty, hide suggestions and show all pets
       setShowSuggestions(false);
       setFilteredPets(pets);
     }
   };
 
-  // 👉 3. When a user taps a recommendation from the dropdown
   const handleSelectSuggestion = (pet: Pet) => {
     setSearchQuery(pet.name);
     setShowSuggestions(false);
-    setFilteredPets([pet]); // Show ONLY the selected pet in the grid
-    Keyboard.dismiss(); // Hide the keyboard
+    setFilteredPets([pet]); 
+    Keyboard.dismiss(); 
   };
 
-  // 👉 4. Clear search button (the 'X')
   const clearSearch = () => {
     setSearchQuery("");
     setShowSuggestions(false);
@@ -110,7 +115,6 @@ export default function Adopt() {
         <View style={{ width: 60 }} />
       </View>
 
-      {/* 👉 5. Search Bar Container */}
       <View className="px-6 mb-4 z-50" style={{ zIndex: 50 }}>
         <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700">
           <Ionicons name="search" size={20} color="#AAAAAA" />
@@ -129,13 +133,11 @@ export default function Adopt() {
           )}
         </View>
 
-        {/* 👉 6. Auto-Recommend Dropdown (Floats above the grid) */}
         {showSuggestions && filteredPets.length > 0 && (
           <View 
             className="absolute top-16 left-6 right-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden" 
             style={{ elevation: 5, zIndex: 100 }}
           >
-            {/* Show only the top 4 suggestions to keep it clean */}
             {filteredPets.slice(0, 4).map((pet, index) => (
               <TouchableOpacity
                 key={`suggestion-${pet._id}`}
@@ -157,7 +159,7 @@ export default function Adopt() {
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
-        keyboardShouldPersistTaps="handled" // 👉 Allows tapping suggestions without the keyboard blocking it
+        keyboardShouldPersistTaps="handled" 
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -174,7 +176,6 @@ export default function Adopt() {
           </View>
         ) : (
           <View className="flex-row flex-wrap justify-between">
-            {/* 👉 7. Map over filteredPets instead of pets */}
             {filteredPets.length > 0 ? (
               filteredPets.map((pet) => (
                 <PetCard
@@ -190,7 +191,7 @@ export default function Adopt() {
               <View className="items-center w-full mt-10">
                 <Ionicons name="search-outline" size={48} color="#D1D5DB" />
                 <Text className="text-neutral text-center w-full mt-4 dark:text-gray-400 font-medium">
-                  No pets found matching &quot;{searchQuery}&quot;
+                  No pets found matching "{searchQuery}"
                 </Text>
               </View>
             )}
