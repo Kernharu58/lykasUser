@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as SecureStore from 'expo-secure-store';
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React, { useEffect, useState } from "react";
@@ -11,10 +10,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../../utils/api"; // 👉 1. Import your API
+import api from "../../utils/api"; 
+import { useAuth } from "../../context/AuthContext"; // 👉 NEW: Import Auth Context
 
-
-// 👉 2. Define the TypeScript interface
 interface Appointment {
   _id: string;
   title: string;
@@ -25,27 +23,18 @@ interface Appointment {
 
 export default function Home() {
   const router = useRouter();
-  const [userName, setUserName] = useState("Guest");
-  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(
-    null,
-  ); // 👉 State for dynamic shift
+  
+  // 👉 NEW: Grab the live user object directly from context!
+  const { user } = useAuth();
+  
+  // Extract just the first name, or default to "Guest"
+  const userName = user?.displayName ? user.displayName.split(" ")[0] : "Guest";
+
+  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null); 
   const [loadingShift, setLoadingShift] = useState(true);
 
- 
   useEffect(() => {
-
-    
-    // Fetch the saved name
-    const fetchUserName = async () => {
-      try {
-        const savedName = await SecureStore.getItemAsync("userName");
-        if (savedName) setUserName(savedName.split(" ")[0]);
-      } catch (error) {
-        console.error("Error loading user name:", error);
-      }
-    };
-
-    // 👉 3. Fetch the user's enrolled shifts and find the next upcoming one
+    // Fetch the user's enrolled shifts and find the next upcoming one
     const fetchNextShift = async () => {
       try {
         const response = await api.get("/appointments/my-appointments");
@@ -75,11 +64,10 @@ export default function Home() {
       }
     };
 
-    fetchUserName();
     fetchNextShift();
   }, []);
 
-  // 👉 4. Helper to format the MongoDB date into a readable string
+  // Helper to format the MongoDB date into a readable string
   const formatApptDate = (dateString: string, durationHours: number) => {
     const d = new Date(dateString);
     const datePart = d.toLocaleDateString("en-US", {
@@ -153,7 +141,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* --- 👉 5. Dynamic Current Appointment Section --- */}
+        {/* --- Dynamic Current Appointment Section --- */}
         <View className="mt-8 mb-8">
           <Text className="text-lg font-bold text-darkBlue mb-4 dark:text-white">
             Current Appointment
