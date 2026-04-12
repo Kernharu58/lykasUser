@@ -20,6 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadTokenAndUser = async () => {
       try {
+        
+        
         const token = await SecureStore.getItemAsync("userToken");
         const userDataString = await SecureStore.getItemAsync("userData"); // 👉 Fetch saved user data
 

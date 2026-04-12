@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from 'expo-secure-store';
 import * as Google from "expo-auth-session/providers/google"; 
+import { makeRedirectUri } from "expo-auth-session";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react"; 
 import {
@@ -18,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
 import * as WebBrowser from "expo-web-browser";
 
+// Ensures the web browser closes automatically after Google login
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LogIn() {
@@ -27,26 +29,39 @@ export default function LogIn() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-// Change this line:
-const { isLoading, userToken, setUserToken, setUser } = useAuth(); // 👉 ADD setUser
+  const { isLoading, userToken, setUserToken, setUser } = useAuth(); 
 
-  // 👉 1. Google Auth Hook (Strictly Web Client ID only!)
+  // 👉 REPLACE THESE WITH YOUR NEW GOOGLE CLOUD CONSOLE KEYS
+  const WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com";
+  const ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID_HERE.apps.googleusercontent.com";
+
+  // 1. Google Auth Hook Configuration
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: "26128745469-5umamh3gclq3il3r7sc0goc89g4sinjm.apps.googleusercontent.com",
-    androidClientId: "26128745469-umpa59h7c4gcrhki8im33a3jjcc2onqb.apps.googleusercontent.com",
-    // 👉 2. Force an HTTPS redirect to bypass Google's block!
-  
-   
+    webClientId: WEB_CLIENT_ID,
+    androidClientId: ANDROID_CLIENT_ID,
+    // By providing the webClientId, expo-auth-session will automatically request an id_token
+    redirectUri: makeRedirectUri({
+      scheme: "carepaws" // Must match the scheme in your app.json!
+    }),
   });
-  // 👉 2. Google Auth Listener
+
+  // 2. Listen for the Google response
   useEffect(() => {
     if (response?.type === "success") {
+      // 🛑 IMPORTANT: We need the id_token for the Node.js backend, not the access_token
       const { id_token } = response.params;
-      handleGoogleBackendLogin(id_token);
+      
+      if (id_token) {
+        handleGoogleBackendLogin(id_token);
+      } else {
+        Alert.alert("Google Auth Error", "No ID Token returned from Google.");
+      }
+    } else if (response?.type === "error") {
+      Alert.alert("Authentication Error", "Failed to authenticate with Google.");
     }
   }, [response]);
 
-  // 👉 3. Google Backend Function 
+  // 3. Send the ID Token to your Node.js Backend
   const handleGoogleBackendLogin = async (idToken: string) => {
     setLoading(true);
     try {
@@ -54,22 +69,21 @@ const { isLoading, userToken, setUserToken, setUser } = useAuth(); // 👉 ADD s
 
       await SecureStore.setItemAsync("userToken", res.data.token);
       await SecureStore.setItemAsync("userName", res.data.user.displayName);
-
       await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user)); 
+      
       setUser(res.data.user);
-
       setUserToken(res.data.token);
 
       router.replace("/(tabs)");
     } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Could not log in with Google");
+      console.error("Backend Verification Error:", error);
+      Alert.alert("Login Error", "Could not verify Google account with server.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 👉 4. Standard Email/Password Login Function
+  // 4. Standard Email/Password Login
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter your email and password.");
@@ -78,18 +92,15 @@ const { isLoading, userToken, setUserToken, setUser } = useAuth(); // 👉 ADD s
 
     setLoading(true);
     try {
-      const response = await api.post("/auth/login", {
-        email,
-        password,
-      });
+      const response = await api.post("/auth/login", { email, password });
 
       await SecureStore.setItemAsync("userToken", response.data.token);
       await SecureStore.setItemAsync("userName", response.data.user.displayName);
-
       await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user)); 
+      
       setUser(response.data.user);
-
       setUserToken(response.data.token);
+      
       router.replace("/(tabs)");
     } catch (error: any) {
       const message = error.response?.data?.message || "Invalid credentials.";
