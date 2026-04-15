@@ -32,8 +32,8 @@ export default function LogIn() {
   const { isLoading, userToken, setUserToken, setUser } = useAuth(); 
 
   // 👉 REPLACE THESE WITH YOUR NEW GOOGLE CLOUD CONSOLE KEYS
-  const WEB_CLIENT_ID = "YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com";
-  const ANDROID_CLIENT_ID = "YOUR_ANDROID_CLIENT_ID_HERE.apps.googleusercontent.com";
+  const WEB_CLIENT_ID = "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com.apps.googleusercontent.com";
+  const ANDROID_CLIENT_ID = "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com.apps.googleusercontent.com";
 
   // 1. Google Auth Hook Configuration
   const [request, response, promptAsync] = Google.useAuthRequest({
