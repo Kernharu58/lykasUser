@@ -32,35 +32,33 @@ export default function LogIn() {
   const { isLoading, userToken, setUserToken, setUser } = useAuth(); 
 
   // 👉 REPLACE THESE WITH YOUR NEW GOOGLE CLOUD CONSOLE KEYS
-  const WEB_CLIENT_ID = "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com.apps.googleusercontent.com";
-  const ANDROID_CLIENT_ID = "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com.apps.googleusercontent.com";
-  //const IOS_CLIENT_ID = "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
+const WEB_CLIENT_ID = "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com";
+const ANDROID_CLIENT_ID = "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com";
+//const IOS_CLIENT_ID = "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
 
   // 1. Google Auth Hook Configuration
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: WEB_CLIENT_ID,
     androidClientId: ANDROID_CLIENT_ID,
     // By providing the webClientId, expo-auth-session will automatically request an id_token
-    redirectUri: makeRedirectUri({
-      scheme: "carepaws" // Must match the scheme in your app.json!
-    }),
+    redirectUri: "https://auth.expo.io/@kernharu/lykas_user",
   });
 
   // 2. Listen for the Google response
-  useEffect(() => {
-    if (response?.type === "success") {
-      // 🛑 IMPORTANT: We need the id_token for the Node.js backend, not the access_token
-      const { id_token } = response.params;
-      
-      if (id_token) {
-        handleGoogleBackendLogin(id_token);
-      } else {
-        Alert.alert("Google Auth Error", "No ID Token returned from Google.");
-      }
-    } else if (response?.type === "error") {
-      Alert.alert("Authentication Error", "Failed to authenticate with Google.");
+useEffect(() => {
+  if (response?.type === "success") {
+    // Safely check both places for the token
+    const id_token = response.authentication?.idToken || response.params?.id_token;
+
+    if (id_token) {
+      handleGoogleBackendLogin(id_token);
+    } else {
+      Alert.alert("Google Auth Error", "No ID Token returned from Google.");
     }
-  }, [response]);
+  } else if (response?.type === "error") {
+    Alert.alert("Authentication Error", "Failed to authenticate with Google.");
+  }
+}, [response]);
 
   // 3. Send the ID Token to your Node.js Backend
   const handleGoogleBackendLogin = async (idToken: string) => {
