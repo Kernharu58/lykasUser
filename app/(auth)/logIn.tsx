@@ -22,6 +22,8 @@ import * as WebBrowser from "expo-web-browser";
 // Ensures the web browser closes automatically after Google login
 WebBrowser.maybeCompleteAuthSession();
 
+
+
 export default function LogIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -37,18 +39,14 @@ const ANDROID_CLIENT_ID = "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.go
 //const IOS_CLIENT_ID = "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
 
   // 1. Google Auth Hook Configuration
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: WEB_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-    // By providing the webClientId, expo-auth-session will automatically request an id_token
-    //redirectUri: "https://auth.expo.io/@kernharu/lykas_user",
-    redirectUri: makeRedirectUri({
-    scheme: "carepaws", // Matches "scheme" in your app.json
-    //path: "https://lykas-user--yulu99l1ww.expo.app"    
-    path: "https://auth.expo.io/@kernharu/lykas_user" // Matches your Expo redirect URI             
+const [request, response, promptAsync] = Google.useAuthRequest({
+  webClientId: WEB_CLIENT_ID,
+  androidClientId: ANDROID_CLIENT_ID,
+  // FIX: Use this function instead of a hardcoded string
+  redirectUri: makeRedirectUri({
+    scheme: "carepaws", // Matches 'scheme' in your app.json
   }),
-    
-  });
+});
 
   // 2. Listen for the Google response
 useEffect(() => {
