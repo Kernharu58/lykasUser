@@ -33,18 +33,20 @@ export default function LogIn() {
 
   const { isLoading, userToken, setUserToken, setUser } = useAuth(); 
 
-  // 👉 REPLACE THESE WITH YOUR NEW GOOGLE CLOUD CONSOLE KEYS
-const WEB_CLIENT_ID = "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com";
-const ANDROID_CLIENT_ID = "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com";
-//const IOS_CLIENT_ID = "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
+// Update the variables and Google.useAuthRequest block in logIn.tsx:
 
-  // 1. Google Auth Hook Configuration
+// 👉 Pull from .env instead of hardcoding. Add fallback strings just in case during transition.
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com";
+const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com";
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
+
 const [request, response, promptAsync] = Google.useAuthRequest({
   webClientId: WEB_CLIENT_ID,
   androidClientId: ANDROID_CLIENT_ID,
-  // FIX: Use this function instead of a hardcoded string
+  iosClientId: IOS_CLIENT_ID, // FIX 4: Uncommented iOS
   redirectUri: makeRedirectUri({
-    scheme: "carepaws", // Matches 'scheme' in your app.json
+    // Standardizing redirect for Expo Go and bare workflow
+    scheme: "carepaws" 
   }),
 });
 

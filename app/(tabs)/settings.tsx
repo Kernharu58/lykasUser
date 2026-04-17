@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api"; 
+import * as SecureStore from 'expo-secure-store'; // FIX 5: Import expo-secure-store
 
 export default function Settings() {
   const router = useRouter();
@@ -136,7 +137,8 @@ export default function Settings() {
     }
   };
 
-  // 👉 NEW: Save Profile Information
+// Inside handleSaveProfile in settings.tsx:
+
   const handleSaveProfile = async () => {
     if (!editName.trim()) {
       Alert.alert("Error", "Name cannot be empty.");
@@ -149,10 +151,11 @@ export default function Settings() {
       
       setDisplayName(response.data.user.displayName);
       
-      // Update global context
+      // FIX 5: Swap AsyncStorage for SecureStore to match AuthContext.tsx
       if (user) {
         setUser({ ...user, displayName: response.data.user.displayName });
-        await AsyncStorage.setItem("userData", JSON.stringify({ ...user, displayName: response.data.user.displayName }));
+        // Use expo-secure-store instead of @react-native-async-storage/async-storage
+        await SecureStore.setItemAsync("userData", JSON.stringify({ ...user, displayName: response.data.user.displayName }));
       }
       
       setEditModalVisible(false);
