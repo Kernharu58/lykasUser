@@ -18,7 +18,7 @@
         "backgroundImage": "./assets/lykas/carePawLogo.jpg",
         "monochromeImage": "./assets/lykas/carePawLogo.jpg"
       },
-      "package": "host.exp.carepaws",
+      "package": "com.kernharu.carepaws",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -58,6 +58,12 @@
         "distribution": "internal"
       }
     },
-    "owner": "kernharu"
+    "owner": "kernharu",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f34897a0-809a-4d0e-9fe8-62d4d56da546"
+    }
   }
 }

@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
 import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from 'expo-auth-session';
 
 // Ensures the web browser closes automatically after Google login
 WebBrowser.maybeCompleteAuthSession();
@@ -49,6 +50,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
     scheme: "carepaws" 
   }),
 });
+
 
   // 2. Listen for the Google response
 useEffect(() => {
