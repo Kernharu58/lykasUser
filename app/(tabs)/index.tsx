@@ -10,7 +10,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../../utils/api"; 
+import api from "../../utils/api";
+import axios from "axios";
 import { useAuth } from "../../context/AuthContext"; // 👉 NEW: Import Auth Context
 
 interface Appointment {
@@ -20,6 +21,8 @@ interface Appointment {
   durationHours: number;
   status: string;
 }
+
+
 
 export default function Home() {
   const router = useRouter();
@@ -57,17 +60,24 @@ export default function Home() {
             setNextAppointment(upcoming[0]); // Set the absolute closest shift
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching next shift:", error);
+        // 👉 ADD THESE LOGS: This will catch the exact error message from the backend
+      console.log("=== 🔴 API ERROR LOG ===");
+      console.log("Route:", error.config?.url);
+      console.log("Status Code:", error.response?.status);
+      console.log("Backend Message:", error.response?.data?.message); // This is the most important line!
+      console.log("========================");
       } finally {
         setLoadingShift(false);
       }
     };
 
     fetchNextShift();
-  }, []);
+}, []);
 
-  // Helper to format the MongoDB date into a readable string
+
+// Helper to format the MongoDB date into a readable string
   const formatApptDate = (dateString: string, durationHours: number) => {
     const d = new Date(dateString);
     const datePart = d.toLocaleDateString("en-US", {

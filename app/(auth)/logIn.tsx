@@ -46,7 +46,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
   iosClientId: IOS_CLIENT_ID, // FIX 4: Uncommented iOS
   redirectUri: makeRedirectUri({
     // Standardizing redirect for Expo Go and bare workflow
-    scheme: "carepaws" 
+    scheme: "com.kernharu.carepaws:/oauth2redirect/google" 
   }),
 });
 
@@ -56,6 +56,7 @@ useEffect(() => {
   if (response?.type === "success") {
     // Safely check both places for the token
     const id_token = response.authentication?.idToken || response.params?.id_token;
+    console.log("Redirect URI:", makeRedirectUri());
 
     if (id_token) {
       handleGoogleBackendLogin(id_token);

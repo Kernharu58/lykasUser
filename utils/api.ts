@@ -3,6 +3,7 @@
 import * as SecureStore from 'expo-secure-store';
 // We use Axios for making HTTP requests to our backend API
 import axios from "axios";
+import { makeRedirectUri } from 'expo-auth-session/build/AuthSession';
 
 // Detect the environment to set the correct backend URL
 // Android emulator uses 10.0.2.2 to connect to your computer's localhost
@@ -27,6 +28,11 @@ api.interceptors.request.use(
   // This function is called before every request is sent
   async (config) => {
     const token = await SecureStore.getItemAsync("userToken");
+
+    // 👉 ADD THIS LOG: Tells us if the token exists before sending
+    console.log(`[API Interceptor] Sending request to ${config.url}`);
+    console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO (Token is missing or null)"}`);
+    console.log("Redirect URI:", makeRedirectUri());
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
