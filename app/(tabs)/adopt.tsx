@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../../components/PetCard";
 import api from "./../utils/api";
 
+
 interface Pet {
   _id: string;
   name: string;
