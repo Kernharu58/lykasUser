@@ -61,10 +61,9 @@ export default function ChatScreen() {
   }, []);
 
   // 👉 Fetch Private History & Connect Socket
-  useEffect(() => {
-    if (!userId) return; // Wait until user ID is verified
+useEffect(() => {
+    if (!userId) return;
 
-    // 1. Fetch Chat History
     const fetchHistory = async () => {
       try {
         const response = await api.get(`/messages/${userId}`);
@@ -75,35 +74,18 @@ export default function ChatScreen() {
     };
     fetchHistory();
 
-    // 2. Connect to Socket.io
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket', 'polling']
     });
 
     socketRef.current.on("connect", () => {
-      // 3. Join a PRIVATE room using the user's ID
       socketRef.current?.emit("joinRoom", userId);
     });
 
-    // 4. Listen for incoming messages (and deduplicate)
+    // ✅ FIXED: Simplified listener. Just append whatever the server sends!
     socketRef.current.on("receiveMessage", (newMessage) => {
-      setMessages((prev) => {
-        // Find if this is a message we already optimistically added to the screen
-        const existingIndex = prev.findIndex(
-          msg => msg.text === newMessage.text && msg.time === newMessage.time && msg.sender === newMessage.sender
-        );
-
-        if (existingIndex !== -1) {
-          // Silent Swap: Replace the local message with the real Database message
-          const newArray = [...prev];
-          newArray[existingIndex] = newMessage;
-          return newArray;
-        }
-
-        // If it's a brand new message (e.g. from the shelter), add it
-        return [...prev, newMessage];
-      });
-      setIsTyping(false); // Stop typing indicator if shelter replies
+      setMessages((prev) => [...prev, newMessage]);
+      setIsTyping(false);
     });
 
     return () => {
@@ -116,13 +98,12 @@ export default function ChatScreen() {
     const text = (overrideText ?? inputText).trim();
     
     if (!userId) {
-      Alert.alert("Session Error", "Could not verify your account. Please log out and log back in.");
+      Alert.alert("Session Error", "Could not verify your account.");
       return;
     }
     
     if (!text || !socketRef.current) return;
 
-    // Data for the backend server (NO local ID)
     const messageDataForServer = {
       userId: userId, 
       text: text,
@@ -130,18 +111,10 @@ export default function ChatScreen() {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    // Data for the UI (Includes a fake local ID so FlatList doesn't crash)
-    const optimisticMessage = {
-      ...messageDataForServer,
-      _id: "local_" + Date.now().toString(), 
-    };
-
-    // 👉 1. INSTANT UI UPDATE: Show it on screen immediately!
-    setMessages((prev) => [...prev, optimisticMessage]);
+    // ✅ FIXED: We clear the input, but we DO NOT update the screen locally anymore.
+    // We let the socket.emit handle it, and it will bounce back in ~50ms.
     setInputText("");
-
-    // 👉 2. SERVER SYNC: Forcefully rejoin room and send the data
-    socketRef.current.emit("joinRoom", userId); 
+    
     socketRef.current.emit("sendMessage", messageDataForServer);
   };
 

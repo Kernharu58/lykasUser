@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api"; 
-import * as SecureStore from 'expo-secure-store'; // FIX 5: Import expo-secure-store
+import * as SecureStore from 'expo-secure-store';
 
 export default function Settings() {
   const router = useRouter();
@@ -47,10 +47,7 @@ export default function Settings() {
     email: "info@carepaws.org"
   });
 
-  // 👉 ADD THIS inside your existing useEffect:
   useEffect(() => {
-    // ... your existing theme & profile fetchers ...
-
     const fetchShelterSettings = async () => {
       try {
         const res = await api.get("/settings");
@@ -68,13 +65,21 @@ export default function Settings() {
     await AsyncStorage.setItem("appTheme", newTheme); 
   };
 
+  // 👉 UPDATED: Load both Theme AND Notification Preferences
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadPreferences = async () => {
+      // Load Theme
       const savedTheme = await AsyncStorage.getItem("appTheme");
       if (savedTheme) {
         setColorScheme(savedTheme as "light" | "dark");
       } else if (!colorScheme) {
         setColorScheme("light");
+      }
+
+      // 👉 NEW: Load Notification Preference from storage
+      const savedNotifs = await AsyncStorage.getItem("notificationsEnabled");
+      if (savedNotifs !== null) {
+        setNotificationsEnabled(savedNotifs === "true");
       }
     };
     
@@ -85,14 +90,36 @@ export default function Settings() {
         if (response.data.profilePicture) {
           setProfilePicture(response.data.profilePicture);
         }
+        // 👉 NEW: If backend has a saved notification status, use it to sync devices
+        if (response.data.notificationsEnabled !== undefined) {
+          setNotificationsEnabled(response.data.notificationsEnabled);
+          await AsyncStorage.setItem("notificationsEnabled", response.data.notificationsEnabled.toString());
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
     };
 
-    loadTheme();
+    loadPreferences();
     fetchUserProfile();
   }, []);
+
+  // 👉 NEW: Function to handle toggling notifications
+  const handleToggleNotifications = async (value: boolean) => {
+    // 1. Instantly update UI for a snappy feel
+    setNotificationsEnabled(value);
+    
+    // 2. Save locally so it remembers on next app open
+    await AsyncStorage.setItem("notificationsEnabled", value.toString());
+
+    // 3. Sync to backend silently
+    try {
+      await api.put("/auth/profile", { notificationsEnabled: value });
+    } catch (error) {
+      console.error("Error syncing notification preference to server:", error);
+      // Optional: Revert UI if you want to be strict, but usually better to let local storage win
+    }
+  };
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -137,8 +164,6 @@ export default function Settings() {
     }
   };
 
-// Inside handleSaveProfile in settings.tsx:
-
   const handleSaveProfile = async () => {
     if (!editName.trim()) {
       Alert.alert("Error", "Name cannot be empty.");
@@ -151,10 +176,8 @@ export default function Settings() {
       
       setDisplayName(response.data.user.displayName);
       
-      // FIX 5: Swap AsyncStorage for SecureStore to match AuthContext.tsx
       if (user) {
         setUser({ ...user, displayName: response.data.user.displayName });
-        // Use expo-secure-store instead of @react-native-async-storage/async-storage
         await SecureStore.setItemAsync("userData", JSON.stringify({ ...user, displayName: response.data.user.displayName }));
       }
       
@@ -218,7 +241,6 @@ export default function Settings() {
             </TouchableOpacity>
           </View>
 
-          {/* 👉 NEW: Editable Display Name Row */}
           <View className="flex-row items-center mb-1">
             <Text className="text-2xl font-bold text-darkBlue dark:text-white">
               {displayName}
@@ -282,7 +304,12 @@ export default function Settings() {
                 </View>
                 <Text className="text-darkBlue font-bold text-base dark:text-white">Push Notifications</Text>
               </View>
-              <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ false: "#E5E7EB", true: "#2D6A4F" }} />
+              {/* 👉 UPDATED: Switch now uses handleToggleNotifications */}
+              <Switch 
+                value={notificationsEnabled} 
+                onValueChange={handleToggleNotifications} 
+                trackColor={{ false: "#E5E7EB", true: "#2D6A4F" }} 
+              />
             </View>
 
             <View className="flex-row justify-between items-center">
@@ -325,7 +352,7 @@ export default function Settings() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* 👉 NEW: Edit Profile Modal */}
+      {/* Edit Profile Modal */}
       <Modal visible={isEditModalVisible} transparent animationType="fade">
         <View className="flex-1 bg-black/50 justify-center items-center px-4">
           <View className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-xl">
