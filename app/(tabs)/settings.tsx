@@ -65,18 +65,8 @@ export default function Settings() {
     await AsyncStorage.setItem("appTheme", newTheme); 
   };
 
-  // 👉 UPDATED: Load both Theme AND Notification Preferences
   useEffect(() => {
     const loadPreferences = async () => {
-      // Load Theme
-      const savedTheme = await AsyncStorage.getItem("appTheme");
-      if (savedTheme) {
-        setColorScheme(savedTheme as "light" | "dark");
-      } else if (!colorScheme) {
-        setColorScheme("light");
-      }
-
-      // 👉 NEW: Load Notification Preference from storage
       const savedNotifs = await AsyncStorage.getItem("notificationsEnabled");
       if (savedNotifs !== null) {
         setNotificationsEnabled(savedNotifs === "true");

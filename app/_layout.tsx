@@ -1,9 +1,26 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
-import React from "react";
+import { useColorScheme } from "nativewind";
+import React, { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
 import "./globals.css";
 
 export default function RootLayout() {
+  const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem("appTheme");
+        setColorScheme(savedTheme === "dark" ? "dark" : "light");
+      } catch {
+        setColorScheme("light");
+      }
+    };
+
+    loadThemePreference();
+  }, [setColorScheme]);
+
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
