@@ -12,7 +12,11 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({ item }: ChatMessageProps) {
+  // On mobile (user's app):
+  // - sender === 'user'                   → message sent BY the user → RIGHT (green)
+  // - sender === 'shelter' or 'admin'     → message received from shelter → LEFT (white)
   const isUser = item.sender === "user";
+
   const messageTime =
     item.time ||
     (item.createdAt
@@ -24,7 +28,7 @@ export default function ChatMessage({ item }: ChatMessageProps) {
 
   return (
     <View className={`mb-4 w-full flex-row items-end ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* Bot avatar */}
+      {/* Shelter avatar — only shown for shelter/admin (left) messages */}
       {!isUser && (
         <View className="w-8 h-8 rounded-full bg-emerald-700 items-center justify-center mr-2 mb-5">
           <Text style={{ fontSize: 14 }}>🐾</Text>
@@ -46,6 +50,7 @@ export default function ChatMessage({ item }: ChatMessageProps) {
 
         <View className={`flex-row items-center mt-1 gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
           <Text className="text-[10px] text-gray-400">{messageTime}</Text>
+          {/* Double checkmark only for user's own sent messages */}
           {isUser && (
             <Ionicons name="checkmark-done" size={12} color="#4ade80" />
           )}
