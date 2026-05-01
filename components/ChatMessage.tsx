@@ -6,12 +6,21 @@ interface ChatMessageProps {
   item: {
     text: string;
     sender: string;
-    time: string;
+    time?: string;
+    createdAt?: string;
   };
 }
 
 export default function ChatMessage({ item }: ChatMessageProps) {
   const isUser = item.sender === "user";
+  const messageTime =
+    item.time ||
+    (item.createdAt
+      ? new Date(item.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "");
 
   return (
     <View className={`mb-4 w-full flex-row items-end ${isUser ? "justify-end" : "justify-start"}`}>
@@ -36,7 +45,7 @@ export default function ChatMessage({ item }: ChatMessageProps) {
         </View>
 
         <View className={`flex-row items-center mt-1 gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
-          <Text className="text-[10px] text-gray-400">{item.time}</Text>
+          <Text className="text-[10px] text-gray-400">{messageTime}</Text>
           {isUser && (
             <Ionicons name="checkmark-done" size={12} color="#4ade80" />
           )}
