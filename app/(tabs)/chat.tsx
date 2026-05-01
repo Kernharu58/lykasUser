@@ -89,7 +89,11 @@ export default function ChatScreen() {
 
     // ✅ FIXED: Simplified listener. Just append whatever the server sends!
       socketRef.current.on("receiveMessage", (newMessage) => {
-        setMessages((prev) => [...prev, newMessage]);
+        console.log("[Socket] receiveMessage sender:", newMessage.sender);
+        setMessages((prev) => {
+          if (newMessage._id && prev.some((m) => m._id === newMessage._id)) return prev;
+          return [...prev, newMessage];
+        });
         setIsTyping(false);
       });
     };
@@ -112,17 +116,8 @@ export default function ChatScreen() {
     
     if (!text || !socketRef.current) return;
 
-    const messageDataForServer = {
-      userId: userId, 
-      text: text,
-      sender: "user",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    // ✅ FIXED: We clear the input, but we DO NOT update the screen locally anymore.
-    // We let the socket.emit handle it, and it will bounce back in ~50ms.
+    const messageDataForServer = { userId, text };
     setInputText("");
-    
     socketRef.current.emit("sendMessage", messageDataForServer);
   };
 
