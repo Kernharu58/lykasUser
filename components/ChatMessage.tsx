@@ -12,10 +12,8 @@ interface ChatMessageProps {
 }
 
 export default function ChatMessage({ item }: ChatMessageProps) {
-  // On mobile (user's app):
-  // - sender === 'user'                   → message sent BY the user → RIGHT (green)
-  // - sender === 'shelter' or 'admin'     → message received from shelter → LEFT (white)
-  const isUser = item.sender === "user";
+  // FIX: Added case-insensitive checking to ensure "User", "USER", and "user" all evaluate correctly
+  const isUser = String(item.sender || '').toLowerCase() === "user";
 
   const messageTime =
     item.time ||
