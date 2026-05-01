@@ -11,7 +11,11 @@ import { makeRedirectUri } from 'expo-auth-session/build/AuthSession';
 // Detect the environment to set the correct backend URL
 const getBaseUrl = () => {
   // 👉 Notice the /api at the very end of the URL!
-  return "https://risky-allie-farcically.ngrok-free.dev/api";
+  const deployedUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (deployedUrl) {
+    return deployedUrl;
+  }
+  return "https://lykasserver.onrender.com/api";
   //return "http://192.168.254.106:5000/api";
 };
 // Create an Axios instance with the base URL and default headers

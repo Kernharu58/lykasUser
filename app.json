@@ -5,11 +5,18 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/lykas/carePawLogo.jpg",
-    "scheme": ["carepaws", "com.kernharu.carepaws"],
+    "scheme": [
+      "carepaws",
+      "com.kernharu.carepaws"
+    ],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kernharu.carepaws",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
