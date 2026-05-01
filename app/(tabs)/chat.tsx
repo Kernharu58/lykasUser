@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { io, Socket } from "socket.io-client";
+import * as SecureStore from "expo-secure-store";
 import api from "../../utils/api";
 
 // Custom Components & Context
@@ -61,7 +62,7 @@ export default function ChatScreen() {
   }, []);
 
   // 👉 Fetch Private History & Connect Socket
-useEffect(() => {
+  useEffect(() => {
     if (!userId) return;
 
     const fetchHistory = async () => {
@@ -74,19 +75,26 @@ useEffect(() => {
     };
     fetchHistory();
 
-    socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket', 'polling']
-    });
+    const connectSocket = async () => {
+      const token = await SecureStore.getItemAsync("userToken");
 
-    socketRef.current.on("connect", () => {
-      socketRef.current?.emit("joinRoom", userId);
-    });
+      socketRef.current = io(SOCKET_URL, {
+        transports: ['websocket', 'polling'],
+        auth: { token },
+      });
+
+      socketRef.current.on("connect", () => {
+        socketRef.current?.emit("joinRoom", userId);
+      });
 
     // ✅ FIXED: Simplified listener. Just append whatever the server sends!
-    socketRef.current.on("receiveMessage", (newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
-      setIsTyping(false);
-    });
+      socketRef.current.on("receiveMessage", (newMessage) => {
+        setMessages((prev) => [...prev, newMessage]);
+        setIsTyping(false);
+      });
+    };
+
+    connectSocket();
 
     return () => {
       socketRef.current?.disconnect();
