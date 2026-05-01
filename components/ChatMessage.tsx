@@ -13,7 +13,7 @@ interface ChatMessageProps {
 
 export default function ChatMessage({ item }: ChatMessageProps) {
   // FIX: Added case-insensitive checking to ensure "User", "USER", and "user" all evaluate correctly
-  const isUser = String(item.sender || '').toLowerCase() === "user";
+const isUser = String(item.sender || '').toLowerCase() === "user";
 
   const messageTime =
     item.time ||
