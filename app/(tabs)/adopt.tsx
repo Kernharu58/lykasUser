@@ -198,7 +198,7 @@ export default function Adopt() {
               <View className="items-center w-full mt-10">
                 <Ionicons name="search-outline" size={48} color="#D1D5DB" />
                 <Text className="text-neutral text-center w-full mt-4 dark:text-gray-400 font-medium">
-                  No pets found matching "{searchQuery}"
+                  No pets found matching &quot;{searchQuery}&quot;
                 </Text>
               </View>
             )}
