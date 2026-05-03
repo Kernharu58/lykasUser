@@ -45,8 +45,8 @@ const [request, response, promptAsync] = Google.useAuthRequest({
   androidClientId: ANDROID_CLIENT_ID,
   iosClientId: IOS_CLIENT_ID, // FIX 4: Uncommented iOS
   redirectUri: makeRedirectUri({
-    // Standardizing redirect for Expo Go and bare workflow
-    scheme: "com.kernharu.carepaws:/oauth2redirect/google" 
+    // Use the scheme defined in app.json
+    scheme: "carepaws"
   }),
 });
 

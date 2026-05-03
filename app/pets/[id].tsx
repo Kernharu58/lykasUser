@@ -34,18 +34,36 @@ export default function PetProfile() {
   // 👉 ALL HOOKS MUST BE AT THE TOP
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     const fetchPetDetails = async () => {
       try {
+        setError(null);
+        
+        // Validate ID format
+        if (!id || typeof id !== 'string') {
+          setError("Invalid pet ID");
+          setLoading(false);
+          return;
+        }
+        
         const response = await api.get(`/pets/${id}`);
         setPet(response.data);
-
-        // Optional: If your backend returns user favorites, you could check here:
-        // setIsFavorite(response.data.isUserFavorite);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching pet details:", error);
+        
+        // Provide specific error messages
+        if (error.response?.status === 404) {
+          setError("Pet not found");
+        } else if (error.response?.status === 400) {
+          setError("Invalid pet ID");
+        } else if (error.response?.status === 500) {
+          setError("Server error loading pet details");
+        } else {
+          setError("Failed to load pet details");
+        }
       } finally {
         setLoading(false);
       }
@@ -76,7 +94,28 @@ export default function PetProfile() {
     );
   }
 
-  // --- 2. Error / Not Found State ---
+  // --- 2. Error State ---
+  if (error) {
+    return (
+      <View className="flex-1 bg-white dark:bg-gray-900 justify-center items-center px-6">
+        <Ionicons name="alert-circle" size={48} color="#dc2626" />
+        <Text className="text-xl font-bold text-darkBlue dark:text-white mt-4 mb-2">
+          Error Loading Pet
+        </Text>
+        <Text className="text-center text-neutral dark:text-gray-300 mb-6">
+          {error}
+        </Text>
+        <TouchableOpacity
+          className="bg-primary py-3 px-6 rounded-xl"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white font-bold">Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // --- 3. Not Found State ---
   if (!pet) {
     return (
       <View className="flex-1 bg-white dark:bg-gray-900 justify-center items-center px-6">
