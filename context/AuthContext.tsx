@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userToken, setUserToken] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [tokenSyncError, setTokenSyncError] = useState<string | null>(null);
   
   const segments = useSegments();
   const router = useRouter();
@@ -24,12 +25,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const token = await SecureStore.getItemAsync("userToken");
         const userDataString = await SecureStore.getItemAsync("userData");
 
+        console.log(`[AuthContext] Token loaded from SecureStore: ${token ? "✅ Present" : "❌ Missing"}`);
+        
         setUserToken(token);
         if (userDataString) {
-          setUser(JSON.parse(userDataString));
+          try {
+            setUser(JSON.parse(userDataString));
+          } catch (parseError) {
+            console.error("[AuthContext] Failed to parse userData:", parseError);
+            setTokenSyncError("Failed to parse user data");
+          }
         }
       } catch (error) {
-        console.error("Error loading auth data:", error);
+        console.error("[AuthContext] Error loading auth data:", error);
+        setTokenSyncError(String(error));
       } finally {
         setIsLoading(false);
       }
@@ -45,8 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAtRoot = !segments[0];
 
     if (userToken && (inAuthGroup || isAtRoot)) {
+      console.log("[AuthContext] User authenticated, routing to tabs");
       router.replace("/(tabs)");
     } else if (!userToken && !inAuthGroup) {
+      console.log("[AuthContext] No token found, routing to login");
       router.replace("/(auth)/logIn");
     }
   }, [userToken, segments, isLoading, rootNavigationState, router]);
@@ -58,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await api.post('/auth/logout');
       }
     } catch (error) {
-      console.error("Logout API call failed:", error);
+      console.error("[AuthContext] Logout API call failed:", error);
       // Still logout locally even if API call fails
     } finally {
       await SecureStore.deleteItemAsync("userToken");
@@ -66,14 +77,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await SecureStore.deleteItemAsync("userData");
       setUserToken(null);
       setUser(null);
+      setTokenSyncError(null);
       router.replace("/(auth)/logIn");
     }
   };
 
   return (
     <AuthContext.Provider
-      // 👉 Export `user` and `setUser` so ChatScreen and LogIn can access them
-      value={{ userToken, setUserToken, user, setUser, logout, isLoading }}
+      // 👉 Export `user` and `setUser` so ChatScreen and LogIn can access users
+      value={{ userToken, setUserToken, user, setUser, logout, isLoading, tokenSyncError }}
     >
       {children}
     </AuthContext.Provider>

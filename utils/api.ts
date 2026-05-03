@@ -18,24 +18,53 @@ const api = axios.create({
     "Content-Type": "application/json",
     "ngrok-skip-browser-warning": "69420"
   },
+  timeout: 10000, // Added timeout to prevent hanging
 });
 
 // 3. Request Interceptor for Auth Tokens
 api.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync("userToken");
+    try {
+      const token = await SecureStore.getItemAsync("userToken");
 
-    console.log(`[API Interceptor] Sending request to ${config.url}`);
-    console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO"}`);
-    
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+      console.log(`[API Interceptor] Sending request to ${config.url}`);
+      console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO"}`);
+      
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log(`[API Interceptor] Authorization header set successfully`);
+      } else if (!token) {
+        console.warn(`[API Interceptor] ⚠️ No token found in SecureStore for endpoint: ${config.url}`);
+      }
+      return config;
+    } catch (error) {
+      console.error(`[API Interceptor] Error retrieving token from SecureStore:`, error);
+      return config; // Continue without token if retrieval fails
     }
-    return config;
   },
   (error) => {
+    console.error(`[API Interceptor] Request interceptor error:`, error);
     return Promise.reject(error);
   },
+);
+
+// 4. Response Interceptor for handling 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Log 401 errors for debugging
+    if (error.response?.status === 401) {
+      console.error(`[API Interceptor] === 🔴 API ERROR LOG ===`);
+      console.error(`[API Interceptor] Route: ${originalRequest.url}`);
+      console.error(`[API Interceptor] Status Code: 401`);
+      console.error(`[API Interceptor] Backend Message: ${error.response?.data?.message}`);
+      console.error(`[API Interceptor] ========================`);
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 // 4. Filtered API Function

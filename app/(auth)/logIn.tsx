@@ -74,16 +74,20 @@ useEffect(() => {
     try {
       const res = await api.post("/auth/google", { idToken });
 
+      // ✅ Store token in SecureStore FIRST, then update context
+      console.log("[GoogleLogin] Storing token in SecureStore...");
       await SecureStore.setItemAsync("userToken", res.data.token);
-      await SecureStore.setItemAsync("userName", res.data.user.displayName);
+      await SecureStore.setItemAsync("userName", res.data.user.displayName || res.data.user.name);
       await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user)); 
       
+      console.log("[GoogleLogin] Token stored successfully, updating context...");
       setUser(res.data.user);
       setUserToken(res.data.token);
 
+      console.log("[GoogleLogin] Navigation to tabs...");
       router.replace("/(tabs)");
     } catch (error) {
-      console.error("Backend Verification Error:", error);
+      console.error("[GoogleLogin] Backend Verification Error:", error);
       Alert.alert("Login Error", "Could not verify Google account with server.");
     } finally {
       setLoading(false);
@@ -101,15 +105,20 @@ useEffect(() => {
     try {
       const response = await api.post("/auth/login", { email, password });
 
+      // ✅ Store token in SecureStore FIRST, then update context
+      console.log("[Login] Storing token in SecureStore...");
       await SecureStore.setItemAsync("userToken", response.data.token);
-      await SecureStore.setItemAsync("userName", response.data.user.displayName);
-      await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user)); 
+      await SecureStore.setItemAsync("userName", response.data.user.displayName || response.data.user.name);
+      await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user));
       
+      console.log("[Login] Token stored successfully, updating context...");
       setUser(response.data.user);
       setUserToken(response.data.token);
       
+      console.log("[Login] Navigation to tabs...");
       router.replace("/(tabs)");
     } catch (error: any) {
+      console.error("[Login] Login error:", error);
       const message = error.response?.data?.message || "Invalid credentials.";
       Alert.alert("Login Failed", message);
     } finally {

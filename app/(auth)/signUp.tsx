@@ -49,12 +49,21 @@ export default function SignUp() {
         password: password,
       });
 
-      Alert.alert("Success!", "Your account has been created.");
+      console.log("[SignUp] ✅ Success:", response.data);
+      Alert.alert("Success!", response.data.message || "Your account has been created.");
+      
+      // Optional: Auto-login or redirect to verify page
       router.replace("/(auth)/logIn");
     } catch (error: any) {
-      console.log("SIGNUP ERROR DETAILS:", error.message, error.response?.data);
-      const message = error.response?.data?.message || "Something went wrong";
-      Alert.alert("Registration Failed", message);
+      console.error("[SignUp] ❌ Error:", error.response?.data || error.message);
+      const message = error.response?.data?.message || error.message || "Something went wrong";
+      const details = error.response?.data?.details || [];
+      
+      const fullMessage = details.length > 0 
+        ? `${message}\n\n${details.join('\n')}`
+        : message;
+      
+      Alert.alert("Registration Failed", fullMessage);
     } finally {
       setLoading(false);
     }
