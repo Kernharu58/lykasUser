@@ -7,7 +7,7 @@
     "icon": "./assets/lykas/carePawLogo.jpg",
     "scheme": [
       "carepaws",
-      "com.kernharu.carepaws"
+      "com.kernharu.carepaws:/oauth2redirect/google"
     ],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
