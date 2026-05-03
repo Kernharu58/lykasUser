@@ -204,6 +204,40 @@ export default function Settings() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         
+        {/* --- Email Verification Banner --- */}
+        {user && !user.emailVerified && (
+          <View className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 mb-6 flex-row items-start">
+            <View className="w-5 h-5 rounded-full bg-amber-500 items-center justify-center mr-3 mt-0.5 shrink-0">
+              <Text className="text-xs text-white font-bold">!</Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-amber-900 dark:text-amber-200 font-bold mb-1">Email Not Verified</Text>
+              <Text className="text-amber-800 dark:text-amber-300 text-xs mb-2">
+                Please verify your email address to ensure you receive important notifications.
+              </Text>
+              <TouchableOpacity onPress={() => router.push("/verify-email")}>
+                <Text className="text-amber-600 dark:text-amber-400 font-bold text-xs">
+                  Verify Email →
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {user && user.emailVerified && (
+          <View className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 mb-6 flex-row items-start">
+            <View className="w-5 h-5 rounded-full bg-emerald-500 items-center justify-center mr-3 mt-0.5 shrink-0">
+              <Text className="text-xs text-white font-bold">✓</Text>
+            </View>
+            <View>
+              <Text className="text-emerald-900 dark:text-emerald-200 font-bold">Email Verified</Text>
+              <Text className="text-emerald-800 dark:text-emerald-300 text-xs">
+                Your email address has been verified.
+              </Text>
+            </View>
+          </View>
+        )}
+        
         {/* --- 1. Avatar & User Info --- */}
         <View className="items-center mb-10 mt-2">
           <View className="relative">

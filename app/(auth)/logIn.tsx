@@ -156,7 +156,7 @@ useEffect(() => {
             autoCapitalize="none"
           />
 
-          <View className="relative justify-center">
+          <View className="relative justify-center mb-2">
             <TextInput
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 pr-12 text-darkBlue font-medium"
               placeholder="Password"
@@ -176,6 +176,13 @@ useEffect(() => {
               />
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            onPress={() => router.push("/forgot-password")}
+            className="mb-6"
+          >
+            <Text className="text-primary font-bold text-sm">Forgot password?</Text>
+          </TouchableOpacity>
         </View>
 
         {/* --- Primary Actions --- */}
