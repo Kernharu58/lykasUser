@@ -1,24 +1,17 @@
-// utils/api.ts
-// This file sets up a centralized API client using Axios, configured to automatically include the JWT token in the Authorization header for all requests.
 import * as SecureStore from 'expo-secure-store';
-// We use Axios for making HTTP requests to our backend API
 import axios from "axios";
 import { makeRedirectUri } from 'expo-auth-session/build/AuthSession';
 
-// Detect the environment to set the correct backend URL
-// Android emulator uses 10.0.2.2 to connect to your computer's localhost
-// iOS simulator uses localhost or 127.0.0.1
-// Detect the environment to set the correct backend URL
+// 1. Base URL Configuration
 const getBaseUrl = () => {
-  // 👉 Notice the /api at the very end of the URL!
   const deployedUrl = process.env.EXPO_PUBLIC_API_URL;
   if (deployedUrl) {
     return deployedUrl;
   }
   return "https://lykasserver.onrender.com/api";
-  //return "http://192.168.254.106:5000/api";
 };
-// Create an Axios instance with the base URL and default headers
+
+// 2. Create Axios Instance
 const api = axios.create({
   baseURL: getBaseUrl(),
   headers: {
@@ -27,16 +20,14 @@ const api = axios.create({
   },
 });
 
-// Interceptor to automatically add the JWT token to every request
+// 3. Request Interceptor for Auth Tokens
 api.interceptors.request.use(
-  // This function is called before every request is sent
   async (config) => {
     const token = await SecureStore.getItemAsync("userToken");
 
-    // 👉 ADD THIS LOG: Tells us if the token exists before sending
     console.log(`[API Interceptor] Sending request to ${config.url}`);
-    console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO (Token is missing or null)"}`);
-    console.log("Redirect URI:", makeRedirectUri());
+    console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO"}`);
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -46,5 +37,31 @@ api.interceptors.request.use(
     return Promise.reject(error);
   },
 );
+
+// 4. Filtered API Function
+// This applies the logic to handle 'All' category and search terms
+export const getPets = async (filters?: { category?: string; search?: string }) => {
+  try {
+    const queryParams: any = {};
+
+    if (filters) {
+      // Only add category if it is not "All"
+      if (filters.category && filters.category !== 'All') {
+        queryParams.category = filters.category;
+      }
+      // Add search term if it exists
+      if (filters.search) {
+        queryParams.search = filters.search;
+      }
+    }
+
+    // Axios automatically converts the params object into ?category=cat&search=name
+    const response = await api.get('/pets', { params: queryParams });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pets:", error);
+    throw error;
+  }
+};
 
 export default api;

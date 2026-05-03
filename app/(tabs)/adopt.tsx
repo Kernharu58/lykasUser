@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-// 👉 1. Import useFocusEffect and useCallback
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useCallback } from "react";
 import {
@@ -25,6 +24,12 @@ interface Pet {
   status: string;
 }
 
+// Helper function to match the getPets structure in your snippet
+const getPets = async (params: { category?: string; search?: string }) => {
+  const response = await api.get("/pets", { params });
+  return response.data;
+};
+
 export default function Adopt() {
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
@@ -32,40 +37,42 @@ export default function Adopt() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined); // Added missing state
   const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const fetchPets = async () => {
+  // 👉 Updated to use the requested fetchFilteredPets function
+  const fetchFilteredPets = async () => {
+    setLoading(true);
     try {
-      const response = await api.get("/pets");
+      // Pass the state variables directly to the API function
+      const data = await getPets({ 
+        category: selectedCategory, 
+        search: searchQuery 
+      }); 
       
-      // 👉 2. STRICT FILTER: Completely remove "Adopted" pets from the array 
-      // just in case the backend accidentally sends them.
-      const availablePets = response.data.filter((pet: Pet) => pet.status !== "Adopted");
-
-      setPets(availablePets);
-      setFilteredPets(availablePets); 
+      setPets(data); // Set the exact data the server returns
+      setFilteredPets(data); // Also update filtered list for UI rendering
     } catch (error) {
-      console.error("Error fetching pets:", error);
+      console.error("Failed to fetch pets", error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+      setRefreshing(false); // Ensure the refresh spinner stops
     }
   };
 
-  // 👉 3. Replace useEffect with useFocusEffect! 
-  // This automatically refreshes the pet list EVERY time you open this tab.
+  // Trigger the new function when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      fetchPets();
-    }, [])
+      fetchFilteredPets();
+    }, [selectedCategory]) // Refetch if category changes
   );
 
   const onRefresh = () => {
     setRefreshing(true);
     setSearchQuery(""); 
     setShowSuggestions(false);
-    fetchPets();
+    fetchFilteredPets();
   };
 
   const handleSearch = (text: string) => {
