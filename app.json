@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/lykas/carePawLogo.jpg",
-    "scheme": "carepaws",
+    "scheme": [
+      "carepaws",
+      "com.kernharu.carepaws:/oauth2redirect/google"
+    ],
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
