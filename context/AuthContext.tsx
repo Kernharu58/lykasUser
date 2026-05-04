@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
 
+  // 👉 FIX: Initialize token from SecureStore on app start
   useEffect(() => {
     const loadTokenAndUser = async () => {
       try {
@@ -27,7 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.log(`[AuthContext] Token loaded from SecureStore: ${token ? "✅ Present" : "❌ Missing"}`);
         
-        setUserToken(token);
+        // Set token first, then user data
+        if (token) {
+          setUserToken(token);
+        }
+        
         if (userDataString) {
           try {
             setUser(JSON.parse(userDataString));
@@ -46,35 +51,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadTokenAndUser();
   }, []);
 
+  // 👉 FIX: Improved routing logic with better state management
   useEffect(() => {
-    if (isLoading) return;
-    if (!rootNavigationState?.key) return;
+    if (isLoading || !rootNavigationState?.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
     const isAtRoot = !segments[0];
+    const isTabsGroup = segments[0] === "(tabs)";
 
-    if (userToken && (inAuthGroup || isAtRoot)) {
+    console.log(`[AuthContext] Routing check - Token: ${userToken ? "✅" : "❌"}, Segment: ${segments[0] || "root"}, Loading: ${isLoading}`);
+
+    // User has token and is trying to access auth screens - redirect to tabs
+    if (userToken && !isTabsGroup && (inAuthGroup || isAtRoot)) {
       console.log("[AuthContext] User authenticated, routing to tabs");
       router.replace("/(tabs)");
-    } else if (!userToken && !inAuthGroup) {
+    } 
+    // User has no token and is trying to access protected screens - redirect to login
+    else if (!userToken && !inAuthGroup) {
       console.log("[AuthContext] No token found, routing to login");
       router.replace("/(auth)/logIn");
     }
-  }, [userToken, segments, isLoading, rootNavigationState, router]);
+  }, [userToken, segments, isLoading, rootNavigationState?.key, router]);
 
   const logout = async () => {
     try {
       // Call backend to blacklist the token
       if (userToken) {
-        await api.post('/auth/logout');
+        await api.post('/auth/logout').catch(err => {
+          console.warn("[AuthContext] Logout API call failed:", err.message);
+          // Don't throw - we still want to logout locally
+        });
       }
     } catch (error) {
-      console.error("[AuthContext] Logout API call failed:", error);
-      // Still logout locally even if API call fails
+      console.error("[AuthContext] Logout error:", error);
+      // Continue with local logout anyway
     } finally {
-      await SecureStore.deleteItemAsync("userToken");
-      await SecureStore.deleteItemAsync("userName");
-      await SecureStore.deleteItemAsync("userData");
+      try {
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userName");
+        await SecureStore.deleteItemAsync("userData");
+      } catch (err) {
+        console.error("[AuthContext] Error deleting from SecureStore:", err);
+      }
+      
       setUserToken(null);
       setUser(null);
       setTokenSyncError(null);
@@ -84,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      // 👉 Export `user` and `setUser` so ChatScreen and LogIn can access users
       value={{ userToken, setUserToken, user, setUser, logout, isLoading, tokenSyncError }}
     >
       {children}

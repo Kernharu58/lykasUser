@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons"; // 👉 Added Ionicons
+import * as SecureStore from 'expo-secure-store';
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -12,10 +13,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
 
 export default function SignUp() {
   const router = useRouter();
+  const { setUserToken, setUser } = useAuth(); // 👉 Added auth context methods
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,10 +53,24 @@ export default function SignUp() {
       });
 
       console.log("[SignUp] ✅ Success:", response.data);
-      Alert.alert("Success!", response.data.message || "Your account has been created.");
       
-      // Optional: Auto-login or redirect to verify page
-      router.replace("/(auth)/logIn");
+      // 👉 FIX: Auto-login after successful signup
+      if (response.data.token) {
+        console.log("[SignUp] Auto-logging in with new account...");
+        await SecureStore.setItemAsync("userToken", response.data.token);
+        await SecureStore.setItemAsync("userName", response.data.user.displayName || name);
+        await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user));
+        
+        setUser(response.data.user);
+        setUserToken(response.data.token);
+        
+        console.log("[SignUp] ✅ Auto-login successful, navigating to tabs");
+        router.replace("/(tabs)");
+      } else {
+        // Fallback: Show success message and redirect to login
+        Alert.alert("Success!", response.data.message || "Your account has been created. Please log in.");
+        router.replace("/(auth)/logIn");
+      }
     } catch (error: any) {
       console.error("[SignUp] ❌ Error:", error.response?.data || error.message);
       const message = error.response?.data?.message || error.message || "Something went wrong";

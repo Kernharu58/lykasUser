@@ -18,7 +18,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     "ngrok-skip-browser-warning": "69420"
   },
-  timeout: 10000, // Added timeout to prevent hanging
+  timeout: 15000, // Increased timeout to 15s for slower networks
 });
 
 // 3. Request Interceptor for Auth Tokens
@@ -27,14 +27,11 @@ api.interceptors.request.use(
     try {
       const token = await SecureStore.getItemAsync("userToken");
 
-      console.log(`[API Interceptor] Sending request to ${config.url}`);
-      console.log(`[API Interceptor] Token attached? : ${token ? "YES" : "NO"}`);
+      console.log(`[API Interceptor] ${config.method?.toUpperCase()} ${config.url}`);
+      console.log(`[API Interceptor] Token attached: ${token ? "✅ YES" : "❌ NO"}`);
       
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log(`[API Interceptor] Authorization header set successfully`);
-      } else if (!token) {
-        console.warn(`[API Interceptor] ⚠️ No token found in SecureStore for endpoint: ${config.url}`);
       }
       return config;
     } catch (error) {
@@ -43,24 +40,61 @@ api.interceptors.request.use(
     }
   },
   (error) => {
-    console.error(`[API Interceptor] Request interceptor error:`, error);
+    console.error(`[API Interceptor] Request setup error:`, error);
     return Promise.reject(error);
   },
 );
 
-// 4. Response Interceptor for handling 401 errors
+// 4. Response Interceptor for handling errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`[API Response] ✅ ${response.status} - ${response.config.url}`);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
+    const endpoint = originalRequest?.url;
+    const message = error.response?.data?.message || error.message;
 
-    // Log 401 errors for debugging
-    if (error.response?.status === 401) {
-      console.error(`[API Interceptor] === 🔴 API ERROR LOG ===`);
-      console.error(`[API Interceptor] Route: ${originalRequest.url}`);
-      console.error(`[API Interceptor] Status Code: 401`);
-      console.error(`[API Interceptor] Backend Message: ${error.response?.data?.message}`);
-      console.error(`[API Interceptor] ========================`);
+    console.error(`[API Error] 🔴 ${status} - ${endpoint}`);
+    console.error(`[API Error] Message: ${message}`);
+
+    // Handle 401 Unauthorized - Token expired or invalid
+    if (status === 401) {
+      console.error(`[API Error] 401 Unauthorized - Token may be expired or revoked`);
+      try {
+        // Clear auth data from storage
+        await SecureStore.deleteItemAsync("userToken");
+        await SecureStore.deleteItemAsync("userData");
+        // Note: Can't navigate from here, let AuthContext handle redirection
+      } catch (err) {
+        console.error("[API Error] Failed to clear auth data:", err);
+      }
+    }
+
+    // Handle 409 Conflict - Usually duplicate email/user
+    if (status === 409) {
+      console.error(`[API Error] 409 Conflict - Resource already exists`);
+    }
+
+    // Handle 400 Bad Request - Validation errors
+    if (status === 400) {
+      console.error(`[API Error] 400 Bad Request - ${message}`);
+      if (error.response?.data?.details) {
+        console.error("[API Error] Validation details:", error.response.data.details);
+      }
+    }
+
+    // Handle 500 Server Error
+    if (status === 500) {
+      console.error(`[API Error] 500 Server Error - Please contact support`);
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error(`[API Error] ❌ Network Error - Unable to reach ${getBaseUrl()}`);
+      console.error("[API Error] Check your internet connection and API server status");
     }
 
     return Promise.reject(error);
