@@ -46,7 +46,8 @@ const [request, response, promptAsync] = Google.useAuthRequest({
   iosClientId: IOS_CLIENT_ID, // FIX 4: Uncommented iOS
   redirectUri: makeRedirectUri({
     // Use the scheme defined in app.json
-    scheme: "com.kernharu.carepaws:/oauth2redirect/google"
+    scheme: ["com.kernharu.carepaws:/oauth2redirect/google","kernharu.carepaws"].find(scheme => scheme.includes("google")) || "com.kernharu.carepaws:/oauth2redirect/google",
+
   }),
 });
 

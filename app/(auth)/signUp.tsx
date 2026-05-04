@@ -99,7 +99,7 @@ export default function SignUp() {
           serverMessage.toLowerCase().includes("already registered")
         ) {
           Alert.alert(
-            "Account Already Exists",
+            "Account Successfully Created",
             "This email is already registered. Would you like to log in instead?",
             [
               { text: "Log In", onPress: () => router.replace("/(auth)/logIn") },
