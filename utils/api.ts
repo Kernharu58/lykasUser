@@ -8,7 +8,7 @@ const getBaseUrl = () => {
   if (deployedUrl) {
     return deployedUrl;
   }
-  return "https://lykasserver.onrender.com/api";
+  return "https://lykasserver.onrender.com";
 };
 
 // 2. Create Axios Instance
@@ -18,7 +18,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     "ngrok-skip-browser-warning": "69420"
   },
-  timeout: 15000, // Increased timeout to 15s for slower networks
+  timeout: 30000, // Increased timeout to 60s for slower networks
 });
 
 // 3. Request Interceptor for Auth Tokens
@@ -101,7 +101,41 @@ api.interceptors.response.use(
   }
 );
 
-// 4. Filtered API Function
+// 4. Retry Logic for Registration (handles network timeouts)
+export const registerWithRetry = async (data: any, maxRetries = 3) => {
+  let lastError;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await api.post('/auth/register', data, {
+        timeout: 60000, // ✅ 60s override for cold-start servers
+      });
+      console.log('[RegisterRetry] ✅ Registration successful');
+      return response.data;
+    } catch (error: any) {
+      lastError = error;
+      const status = error.response?.status;
+      
+      if (status === 400 || status === 409 || status === 429) {
+        console.error(`[RegisterRetry] ❌ Status ${status} - Not retrying`);
+        throw error;
+      }
+      
+      if (i < maxRetries - 1) {
+        const baseDelay = Math.pow(2, i + 1) * 1000;
+        const jitter = Math.random() * 1000;
+        const delay = baseDelay + jitter;
+        console.log(`[RegisterRetry] Attempt ${i + 1}/${maxRetries} - Retrying in ${Math.round(delay)}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  console.error('[RegisterRetry] ❌ Failed after 3 attempts');
+  throw lastError;
+};
+
+// 5. Filtered API Function
 // This applies the logic to handle 'All' category and search terms
 export const getPets = async (filters?: { category?: string; search?: string }) => {
   try {
