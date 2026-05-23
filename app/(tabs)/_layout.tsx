@@ -12,40 +12,20 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: isDark ? "#4ade80" : "#2D6A4F",
-        tabBarInactiveTintColor: isDark ? "#6b7280" : "#AAAAAA",
+        tabBarActiveTintColor: isDark ? "#f97316" : "#D4622A",
+        tabBarInactiveTintColor: isDark ? "#6b7280" : "#B0A898",
         headerShown: false,
-
-        // 🌟 Floating Tab Bar Styling 🌟
         tabBarStyle: {
-          // 👉 1. Dimensions and Positioning
           height: Platform.OS === "ios" ? 80 : 70,
-          position: "absolute", // Detach from the bottom of the screen
-
-          // 👉 2. Floating Spacing
-          bottom: 55, // Set to 8 pixels from the bottom edge
-          left: 30, // Margin from left
-          right: 30, // Margin from right
-
-          // 👉 3. Shape and Visuals
-          borderRadius: 40, // Rounded edges
-          backgroundColor: isDark ? "#111827" : "#FFFFFF",
-          borderTopWidth: 0, // Remove the default line
-
-          // 👉 4. Padding for Icons/Labels
+          backgroundColor: isDark ? "#111827" : "#FDFAF4",
+          borderTopColor: isDark ? "#1f2937" : "#E8E4DC",
+          borderTopWidth: 1,
           paddingBottom: Platform.OS === "ios" ? 25 : 12,
           paddingTop: 12,
-
-          // 👉 5. Elevation and Shadow (Creates the "float" effect)
-          elevation: 8, // Android shadow
-          shadowColor: "#000", // iOS shadow
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 10,
+          elevation: 0,
         },
-
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: "600",
           marginTop: -1,
         },
@@ -54,55 +34,51 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Discover",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="adopt"
+        name="favorites"
         options={{
-          title: "Adopt",
+          title: "Saved",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "paw" : "paw-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "heart" : "heart-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="my-applications"
         options={{
-          title: "Chat",
+          title: "My Apps",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "clipboard" : "clipboard-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="events"
         options={{
-          title: "Settings",
+          title: "Events",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "settings" : "settings-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={24} color={color} />
           ),
         }}
       />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen name="adopt" options={{ href: null }} />
+      <Tabs.Screen name="chat" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
