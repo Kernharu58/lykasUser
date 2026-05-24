@@ -43,7 +43,7 @@ export default function RootLayout() {
         <Stack.Screen name="appointments/index" />
         <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
         <Stack.Screen name="favorites" />
-        <Stack.Screen name="my-pets" />
+        <Stack.Screen name="my-pets" />`r`n        <Stack.Screen name="notifications" />`r`n        <Stack.Screen name="baby-book/[petId]" />`r`n        <Stack.Screen name="foster/[petId]" />
         
         {/* 👉 Add this line right here! */}
         <Stack.Screen name="donate" options={{ presentation: "modal" }} /> 
@@ -51,3 +51,4 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+

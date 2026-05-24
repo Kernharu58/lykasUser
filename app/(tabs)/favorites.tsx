@@ -13,26 +13,26 @@ export default function Favorites() {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}>
         <View className="mt-4 mb-6">
-          <Text className="text-3xl font-extrabold text-[#2C2C2C] dark:text-white">Saved Pets</Text>
-          <Text className="text-[#7A7068] dark:text-gray-400 mt-2">Keep track of pets you want to revisit.</Text>
+          <Text className="text-3xl font-extrabold text-[#111827] dark:text-white">Saved Pets</Text>
+          <Text className="text-[#6B7280] dark:text-gray-400 mt-2">Keep track of pets you want to revisit.</Text>
         </View>
 
         <View className="gap-4">
           {savedPets.map((pet) => (
             <TouchableOpacity
               key={pet.id}
-              className="flex-row items-center rounded-3xl border border-[#E8E4DC] bg-white p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700"
+              className="flex-row items-center rounded-3xl border border-[#DCE8E1] bg-white p-4 shadow-sm dark:bg-gray-800 dark:border-gray-700"
               onPress={() => router.push(`/pets/${pet.id}`)}
             >
-              <View className="h-16 w-16 items-center justify-center rounded-2xl bg-[#F5EDD6]">
-                <Ionicons name="paw" size={28} color="#D4622A" />
+              <View className="h-16 w-16 items-center justify-center rounded-2xl bg-[#EAF4EE]">
+                <Ionicons name="paw" size={28} color="#1E6B45" />
               </View>
               <View className="ml-4 flex-1">
-                <Text className="text-lg font-extrabold text-[#2C2C2C] dark:text-white">{pet.name}</Text>
-                <Text className="text-sm text-[#7A7068] dark:text-gray-400">{pet.breed} - {pet.age}</Text>
+                <Text className="text-lg font-extrabold text-[#111827] dark:text-white">{pet.name}</Text>
+                <Text className="text-sm text-[#6B7280] dark:text-gray-400">{pet.breed} - {pet.age}</Text>
                 <Text className="mt-1 text-xs font-bold text-[#3D8A5E]">{pet.status}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#B0A898" />
@@ -43,3 +43,4 @@ export default function Favorites() {
     </SafeAreaView>
   );
 }
+

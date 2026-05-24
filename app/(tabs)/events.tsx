@@ -13,37 +13,37 @@ export default function Events() {
   const [mode, setMode] = useState<"Upcoming" | "Past">("Upcoming");
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}>
         <View className="mt-4 mb-5">
-          <Text className="text-3xl font-extrabold text-[#2C2C2C] dark:text-white">Community Events</Text>
-          <Text className="text-[#7A7068] dark:text-gray-400 mt-2">RSVP, volunteer, and meet adoptable pets in person.</Text>
+          <Text className="text-3xl font-extrabold text-[#111827] dark:text-white">Community Events</Text>
+          <Text className="text-[#6B7280] dark:text-gray-400 mt-2">RSVP, volunteer, and meet adoptable pets in person.</Text>
         </View>
 
         <View className="mb-5 flex-row rounded-2xl bg-[#F4F2EE] p-1 dark:bg-gray-800">
           {(["Upcoming", "Past"] as const).map((item) => (
             <TouchableOpacity key={item} className={`flex-1 rounded-xl py-3 ${mode === item ? "bg-white dark:bg-gray-700" : ""}`} onPress={() => setMode(item)}>
-              <Text className={`text-center font-bold ${mode === item ? "text-[#D4622A]" : "text-[#7A7068]"}`}>{item}</Text>
+              <Text className={`text-center font-bold ${mode === item ? "text-[#1E6B45]" : "text-[#6B7280]"}`}>{item}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <View className="gap-4">
           {events.map((event) => (
-            <View key={event.title} className="rounded-3xl border border-[#E8E4DC] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <View key={event.title} className="rounded-3xl border border-[#DCE8E1] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
               <View className="mb-4 flex-row items-center justify-between">
-                <View className="rounded-full bg-[#F5EDD6] px-3 py-1">
-                  <Text className="text-xs font-bold text-[#D4622A]">{event.type}</Text>
+                <View className="rounded-full bg-[#EAF4EE] px-3 py-1">
+                  <Text className="text-xs font-bold text-[#1E6B45]">{event.type}</Text>
                 </View>
-                <Text className="text-xs font-bold text-[#7A7068]">{event.date}</Text>
+                <Text className="text-xs font-bold text-[#6B7280]">{event.date}</Text>
               </View>
-              <Text className="text-xl font-extrabold text-[#2C2C2C] dark:text-white">{event.title}</Text>
+              <Text className="text-xl font-extrabold text-[#111827] dark:text-white">{event.title}</Text>
               <View className="mt-3 gap-2">
-                <Text className="text-sm font-medium text-[#7A7068] dark:text-gray-400"><Ionicons name="time-outline" size={14} /> {event.time}</Text>
-                <Text className="text-sm font-medium text-[#7A7068] dark:text-gray-400"><Ionicons name="location-outline" size={14} /> {event.place}</Text>
-                <Text className="text-sm font-medium text-[#7A7068] dark:text-gray-400"><Ionicons name="people-outline" size={14} /> {event.going} going - {event.spots} spots left</Text>
+                <Text className="text-sm font-medium text-[#6B7280] dark:text-gray-400"><Ionicons name="time-outline" size={14} /> {event.time}</Text>
+                <Text className="text-sm font-medium text-[#6B7280] dark:text-gray-400"><Ionicons name="location-outline" size={14} /> {event.place}</Text>
+                <Text className="text-sm font-medium text-[#6B7280] dark:text-gray-400"><Ionicons name="people-outline" size={14} /> {event.going} going - {event.spots} spots left</Text>
               </View>
-              <TouchableOpacity className="mt-5 rounded-xl bg-[#D4622A] py-3">
+              <TouchableOpacity className="mt-5 rounded-xl bg-[#1E6B45] py-3">
                 <Text className="text-center font-bold text-white">RSVP</Text>
               </TouchableOpacity>
             </View>
@@ -53,3 +53,4 @@ export default function Events() {
     </SafeAreaView>
   );
 }
+

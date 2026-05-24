@@ -1,205 +1,164 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import PetCard from "../../components/PetCard";
+import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
-import axios from "axios";
-import { useAuth } from "../../context/AuthContext"; // 👉 NEW: Import Auth Context
 
-interface Appointment {
+interface Pet {
   _id: string;
-  title: string;
-  date: string;
-  durationHours: number;
+  name: string;
+  breed: string;
+  imageUrl: string;
   status: string;
+  species?: string;
 }
 
+const fallbackPets: Pet[] = [
+  { _id: "demo-emma", name: "Emma", breed: "Golden Retriever", imageUrl: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=600", status: "Available", species: "Dog" },
+  { _id: "demo-luna", name: "Luna", breed: "Persian Cat", imageUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600", status: "Available", species: "Cat" },
+  { _id: "demo-milo", name: "Milo", breed: "Beagle", imageUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600", status: "Fostered", species: "Dog" },
+  { _id: "demo-poppy", name: "Poppy", breed: "Holland Lop", imageUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=600", status: "Available", species: "Rabbit" },
+];
 
+const categories = ["All", "Dog", "Cat", "Rabbit", "Other"];
 
-export default function Home() {
+export default function Discover() {
   const router = useRouter();
-  
-  // 👉 NEW: Grab the live user object directly from context!
   const { user } = useAuth();
-  
-  // Extract just the first name, or default to "Guest"
-  const userName = user?.displayName ? user.displayName.split(" ")[0] : "Guest";
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
 
-  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null); 
-  const [loadingShift, setLoadingShift] = useState(true);
+  const firstName = user?.displayName?.split(" ")[0] || "friend";
 
-  useEffect(() => {
-    // Fetch the user's enrolled shifts and find the next upcoming one
-    const fetchNextShift = async () => {
-      try {
-        const response = await api.get("/appointments/my-appointments");
-        const shifts = response.data;
-
-        if (shifts && shifts.length > 0) {
-          const now = new Date();
-          // Filter out past shifts and sort by the closest date
-          const upcoming = shifts
-            .filter(
-              (shift: Appointment) =>
-                new Date(shift.date) > now && shift.status !== "Completed",
-            )
-            .sort(
-              (a: Appointment, b: Appointment) =>
-                new Date(a.date).getTime() - new Date(b.date).getTime(),
-            );
-
-          if (upcoming.length > 0) {
-            setNextAppointment(upcoming[0]); // Set the absolute closest shift
-          }
-        }
-      } catch (error: any) {
-        console.error("Error fetching next shift:", error);
-        // 👉 ADD THESE LOGS: This will catch the exact error message from the backend
-      console.log("=== 🔴 API ERROR LOG ===");
-      console.log("Route:", error.config?.url);
-      console.log("Status Code:", error.response?.status);
-      console.log("Backend Message:", error.response?.data?.message); // This is the most important line!
-      console.log("========================");
-      } finally {
-        setLoadingShift(false);
-      }
-    };
-
-    fetchNextShift();
-}, []);
-
-
-// Helper to format the MongoDB date into a readable string
-  const formatApptDate = (dateString: string, durationHours: number) => {
-    const d = new Date(dateString);
-    const datePart = d.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-    const start = d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    const end = new Date(
-      d.getTime() + durationHours * 3600000,
-    ).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    return `${datePart} • ${start} - ${end}`;
+  const fetchPets = async () => {
+    try {
+      const response = await api.get("/pets");
+      setPets(Array.isArray(response.data) && response.data.length > 0 ? response.data : fallbackPets);
+    } catch {
+      setPets(fallbackPets);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
+  useEffect(() => {
+    fetchPets();
+  }, []);
+
+  const visiblePets = useMemo(() => {
+    return pets.filter((pet) => {
+      const matchesCategory = category === "All" || pet.species === category;
+      const term = query.trim().toLowerCase();
+      const matchesQuery = !term || `${pet.name} ${pet.breed}`.toLowerCase().includes(term);
+      return matchesCategory && matchesQuery;
+    });
+  }, [pets, category, query]);
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPets(); }} tintColor="#1E6B45" colors={["#1E6B45"]} />}
       >
-        {/* --- Header Area --- */}
-        <View className="flex-row items-center justify-between mt-4">
-          <View className="flex-row items-center">
-            <Ionicons name="apps" size={20} color="#2D6A4F" />
-            <Text className="text-xl font-bold text-darkBlue ml-2 dark:text-white">
-              CarePaws
-            </Text>
+        <View className="mt-4 flex-row items-center justify-between">
+          <View>
+            <Text className="text-sm font-bold uppercase tracking-widest text-[#1E6B45]">CarePaws</Text>
+            <Text className="mt-1 text-3xl font-extrabold text-[#111827] dark:text-white">Hi, {firstName}</Text>
           </View>
-          <View className="flex-row items-center">
-            <Ionicons name="location-sharp" size={16} color="#D08C60" />
-            <Text className="text-neutral text-sm ml-1 dark:text-gray-300">
-              Angeles City, Pampanga
-            </Text>
-          </View>
-        </View>
-
-        {/* --- Dynamic Welcome Greeting --- */}
-        <Text className="text-3xl font-bold text-darkBlue mt-8 dark:text-white">
-          Welcome back, {userName}
-        </Text>
-
-        {/* --- Community Impact Section --- */}
-        <View className="mt-8">
-          <Text className="text-lg font-bold text-darkBlue mb-4 dark:text-white">
-            Community Impact
-          </Text>
-          <View className="bg-primary rounded-2xl p-5 dark:bg-emerald-900">
-            <Text className="text-white font-bold text-lg mb-2">
-              Help a Pet in Need
-            </Text>
-            <Text className="text-white/90 text-sm mb-6 leading-5">
-              Shelters in your area are currently at{"\n"}capacity.{"\n"}Your
-              support matters.
-            </Text>
-            <View className="flex-row justify-between">
-              <TouchableOpacity className="flex-1 bg-white dark:bg-emerald-800 py-3 rounded-xl items-center mr-2"
-              onPress={() => router.push("/donate")}>
-                <Text className="text-primary dark:text-white font-bold">
-                  Donate
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 border-2 border-white py-3 rounded-xl items-center ml-2"
-                onPress={() => router.push("/appointments")}
-              >
-                <Text className="text-white font-bold">Volunteer</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* --- Dynamic Current Appointment Section --- */}
-        <View className="mt-8 mb-8">
-          <Text className="text-lg font-bold text-darkBlue mb-4 dark:text-white">
-            Current Appointment
-          </Text>
-
-          {loadingShift ? (
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 items-center justify-center">
-              <ActivityIndicator color="#2D6A4F" />
-            </View>
-          ) : nextAppointment ? (
-            <TouchableOpacity
-              className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700"
-              onPress={() => router.push("/my-appointments")}
-            >
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-darkBlue dark:text-white font-bold text-base">
-                  {nextAppointment.title}
-                </Text>
-                <Text className="text-primary dark:text-emerald-400 font-bold">
-                  Enrolled
-                </Text>
-              </View>
-              <Text className="text-neutral dark:text-gray-400 text-sm mb-1">
-                {formatApptDate(
-                  nextAppointment.date,
-                  nextAppointment.durationHours,
-                )}
-              </Text>
-              <Text className="text-neutral dark:text-gray-400 text-sm flex-row items-center">
-                Happy Paws Shelter
-              </Text>
+          <View className="flex-row gap-2">
+            <TouchableOpacity className="h-11 w-11 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700" onPress={() => router.push("/notifications" as any)}>
+              <Ionicons name="notifications-outline" size={22} color="#1E6B45" />
+              <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[#E8A020]" />
             </TouchableOpacity>
-          ) : (
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-dashed border-gray-300 dark:border-gray-600 items-center">
-              <Ionicons name="calendar-outline" size={32} color="#AAAAAA" />
-              <Text className="text-neutral dark:text-gray-400 text-center mt-3 font-medium">
-                You have no upcoming shifts.
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/appointments")}
-                className="mt-3"
-              >
-                <Text className="text-primary font-bold">Find a shift</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            <TouchableOpacity className="h-11 w-11 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700" onPress={() => router.push("/(tabs)/chat")}>
+              <Ionicons name="chatbubble-ellipses-outline" size={22} color="#1E6B45" />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        <Text className="mt-3 text-lg font-semibold text-[#3D3830] dark:text-gray-200">Find your forever friend</Text>
+
+        <View className="mt-5 flex-row items-center rounded-2xl border border-[#DCE8E1] bg-white px-4 py-3 dark:bg-gray-800 dark:border-gray-700">
+          <Ionicons name="search" size={20} color="#B0A898" />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search pets..."
+            placeholderTextColor="#B0A898"
+            className="ml-2 flex-1 text-[#111827] dark:text-white font-medium"
+            autoCorrect={false}
+          />
+          <TouchableOpacity className="rounded-full bg-[#EAF4EE] px-3 py-1" onPress={() => setQuery("")}>
+            <Text className="text-xs font-bold text-[#1E6B45]">Clear</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4">
+          <View className="flex-row gap-2">
+            {categories.map((item) => (
+              <TouchableOpacity key={item} onPress={() => setCategory(item)} className={`rounded-full px-4 py-2 ${category === item ? "bg-[#1E6B45]" : "bg-white border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700"}`}>
+                <Text className={`font-bold ${category === item ? "text-white" : "text-[#6B7280] dark:text-gray-300"}`}>{item}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View className="mt-6 rounded-3xl bg-[#1E6B45] p-5">
+          <Text className="text-xl font-extrabold text-white">Adoption takes care, not guesswork.</Text>
+          <Text className="mt-2 text-sm leading-5 text-white/90">Track applications, foster first, chat with staff, and keep health records after adoption.</Text>
+          <View className="mt-4 flex-row gap-3">
+            <TouchableOpacity className="flex-1 rounded-xl bg-white py-3" onPress={() => router.push("/(tabs)/my-applications")}>
+              <Text className="text-center font-bold text-[#1E6B45]">My Apps</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="flex-1 rounded-xl border border-white py-3" onPress={() => router.push("/donate")}>
+              <Text className="text-center font-bold text-white">Donate</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View className="mt-7 mb-4 flex-row items-center justify-between">
+          <Text className="text-xl font-extrabold text-[#111827] dark:text-white">Available pets</Text>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/adopt")}>
+            <Text className="font-bold text-[#1E6B45]">See all</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <View className="mt-14 items-center">
+            <ActivityIndicator color="#1E6B45" />
+            <Text className="mt-3 text-[#6B7280] dark:text-gray-400">Finding pets near you...</Text>
+          </View>
+        ) : visiblePets.length > 0 ? (
+          <View className="flex-row flex-wrap justify-between">
+            {visiblePets.map((pet) => (
+              <PetCard key={pet._id} id={pet._id} name={pet.name} breed={pet.breed} image={pet.imageUrl} status={pet.status} />
+            ))}
+          </View>
+        ) : (
+          <View className="mt-10 items-center rounded-3xl border border-dashed border-[#DCE8E1] bg-white p-8 dark:bg-gray-800 dark:border-gray-700">
+            <Ionicons name="search-outline" size={44} color="#B0A898" />
+            <Text className="mt-4 text-lg font-bold text-[#111827] dark:text-white">No pets found</Text>
+            <Text className="mt-1 text-center text-[#6B7280] dark:text-gray-400">Try another search or clear your filters.</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+
