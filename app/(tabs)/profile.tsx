@@ -8,10 +8,16 @@ import { useAuth } from "../../context/AuthContext";
 const sections = [
   { title: "My Applications", subtitle: "Track adoption and foster reviews", icon: "clipboard-outline", path: "/(tabs)/my-applications" },
   { title: "My Pets", subtitle: "Baby book and health updates", icon: "paw-outline", path: "/my-pets" },
+  { title: "Foster Trial", subtitle: "Reports, reminders, and staff check-ins", icon: "home-outline", path: "/foster-dashboard" },
+  { title: "My Documents", subtitle: "Verification status and uploads", icon: "document-text-outline", path: "/documents" },
+  { title: "Payments", subtitle: "Adoption fees and receipts", icon: "card-outline", path: "/payments" },
   { title: "Saved Pets", subtitle: "Pets you want to revisit", icon: "heart-outline", path: "/(tabs)/favorites" },
+  { title: "Compare Pets", subtitle: "Review saved pets side by side", icon: "git-compare-outline", path: "/compare-pets" },
   { title: "Donation History", subtitle: "Receipts and past gifts", icon: "receipt-outline", path: "/donate" },
+  { title: "Volunteer Portal", subtitle: "Visits, events, attendance, and reports", icon: "people-outline", path: "/volunteer-portal" },
+  { title: "Report Concern", subtitle: "Emergency welfare reporting", icon: "alert-circle-outline", path: "/emergency-report" },
   { title: "Messages", subtitle: "Chat with shelter staff", icon: "chatbubbles-outline", path: "/(tabs)/chat" },
-  { title: "Notification Settings", subtitle: "Push, email, and reminders", icon: "notifications-outline", path: "/(tabs)/settings" },
+  { title: "Settings", subtitle: "Account, security, privacy, and notifications", icon: "settings-outline", path: "/(tabs)/settings" },
 ];
 
 export default function Profile() {
@@ -36,18 +42,17 @@ export default function Profile() {
         <View className="mt-8 rounded-3xl bg-white p-5 shadow-sm border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700">
           <Text className="text-lg font-extrabold text-[#111827] dark:text-white">Care progress</Text>
           <View className="mt-4 flex-row justify-between">
-            <View className="items-center">
-              <Text className="text-2xl font-extrabold text-[#1E6B45]">2</Text>
-              <Text className="text-xs font-bold text-[#6B7280]">Applications</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-2xl font-extrabold text-[#1E6B45]">4</Text>
-              <Text className="text-xs font-bold text-[#6B7280]">Saved</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-2xl font-extrabold text-[#1E6B45]">1</Text>
-              <Text className="text-xs font-bold text-[#6B7280]">Events</Text>
-            </View>
+            {[
+              ["2", "Total Apps"],
+              ["1", "Approved"],
+              ["1", "Foster"],
+              ["92%", "Compliance"],
+            ].map(([value, label]) => (
+              <View key={label} className="items-center">
+                <Text className="text-2xl font-extrabold text-[#1E6B45]">{value}</Text>
+                <Text className="text-xs font-bold text-[#6B7280]">{label}</Text>
+              </View>
+            ))}
           </View>
         </View>
 

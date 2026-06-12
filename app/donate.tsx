@@ -1,229 +1,112 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../utils/api";
+
+const amounts = [500, 1000, 2500, 5000];
+const methods = [
+  { key: "gcash", label: "GCash" },
+  { key: "card", label: "Credit / Debit" },
+  { key: "paymaya", label: "Maya" },
+  { key: "grab_pay", label: "GrabPay" },
+];
 
 export default function Donate() {
   const router = useRouter();
   const [selectedAmount, setSelectedAmount] = useState<number | "custom">(1000);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("gcash");
+  const [loading, setLoading] = useState(false);
 
-  const amounts = [500, 1000, 2500, 5000];
+  const finalAmount = selectedAmount === "custom" ? Number(customAmount) : selectedAmount;
 
-  const handleDonate = () => {
-    const finalAmount =
-      selectedAmount === "custom" ? customAmount : selectedAmount;
-
-    if (!finalAmount || Number(finalAmount) <= 0) {
+  const handleDonate = async () => {
+    if (!finalAmount || finalAmount <= 0) {
       Alert.alert("Invalid Amount", "Please enter a valid donation amount.");
       return;
     }
-
-    Alert.alert(
-      "Thank You! 🐾",
-      `Your generous donation of ₱${finalAmount} helps us save more pets at Happy Paws Shelter!`,
-      [{ text: "Back to Home", onPress: () => router.push("/(tabs)") }]
-    );
+    setLoading(true);
+    try {
+      const res = await api.post("/payments/create-checkout", {
+        type: "donation",
+        amount: finalAmount,
+        description: `Donation to CarePaws Shelter — ₱${finalAmount}`,
+        successUrl: "carepaws://payment/success",
+        cancelUrl:  "carepaws://payment/cancel",
+      });
+      const { checkoutUrl } = res.data;
+      if (checkoutUrl) {
+        await Linking.openURL(checkoutUrl);
+      }
+    } catch (err: any) {
+      Alert.alert("Payment Error", err.response?.data?.message || "Could not initiate payment.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <KeyboardAvoidingView
-        // 👉 FIX 1: Set Android behavior to undefined so the OS handles it naturally
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
-      >
-        {/* Header */}
-        <View className="flex-row items-center px-6 mt-4 mb-2">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="flex-row items-center z-10"
-          >
-            <Ionicons name="close" size={24} color="#2D6A4F" />
-          </TouchableOpacity>
-          <View className="absolute left-0 right-0 items-center pointer-events-none">
-            <Text className="text-xl font-bold text-darkBlue dark:text-white">
-              Make a Donation
-            </Text>
-          </View>
-        </View>
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+      <View className="flex-row items-center px-6 mt-4 mb-5">
+        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800">
+          <Ionicons name="arrow-back" size={20} color="#1E6B45" />
+        </TouchableOpacity>
+        <Text className="ml-4 text-2xl font-extrabold text-[#111827] dark:text-white">Donate</Text>
+      </View>
 
-        <ScrollView
-          // 👉 FIX 2: Increased paddingBottom to 180 so the input clears the sticky button
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 180 }}
-          showsVerticalScrollIndicator={false}
-          // 👉 FIX 3: Ensures tapping outside the keyboard dismisses it smoothly
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Hero Section */}
-          <View className="items-center mt-6 mb-8">
-            <View className="w-20 h-20 bg-green-50 dark:bg-emerald-900/30 rounded-full items-center justify-center mb-4">
-              <Ionicons name="heart" size={40} color="#EF4444" />
-            </View>
-            <Text className="text-2xl font-extrabold text-darkBlue dark:text-white text-center mb-2">
-              Help us save more lives
-            </Text>
-            <Text className="text-neutral dark:text-gray-400 text-center text-base px-4">
-              Your contribution goes directly to food, medicine, and shelter for
-              rescued animals.
-            </Text>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}>
+          <View className="rounded-3xl bg-[#1E6B45] p-5 mb-6">
+            <Text className="text-2xl font-extrabold text-white">Support CarePaws 🐾</Text>
+            <Text className="mt-2 text-white/80">Your donation helps us feed, shelter, and care for animals waiting for their forever home.</Text>
           </View>
 
-          {/* Amount Selection */}
-          <Text className="text-lg font-bold text-darkBlue dark:text-white mb-4">
-            Select Amount
-          </Text>
-          <View className="flex-row flex-wrap justify-between mb-6">
-            {amounts.map((amt) => (
-              <TouchableOpacity
-                key={amt}
-                onPress={() => {
-                  setSelectedAmount(amt);
-                  setCustomAmount(""); // Clear custom if they tap a preset
-                }}
-                className={`w-[48%] py-4 rounded-2xl border-2 mb-3 items-center ${
-                  selectedAmount === amt
-                    ? "bg-primary border-primary dark:bg-emerald-700 dark:border-emerald-700"
-                    : "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-                }`}
-              >
-                <Text
-                  className={`font-bold text-lg ${
-                    selectedAmount === amt
-                      ? "text-white"
-                      : "text-darkBlue dark:text-white"
-                  }`}
-                >
-                  ₱{amt}
-                </Text>
+          <Text className="mb-3 font-extrabold text-[#111827] dark:text-white">Choose an amount</Text>
+          <View className="mb-5 flex-row flex-wrap gap-3">
+            {amounts.map(a => (
+              <TouchableOpacity key={a} className={`rounded-2xl px-5 py-3 ${selectedAmount === a ? "bg-[#1E6B45]" : "bg-white border border-[#DCE8E1] dark:bg-gray-800"}`}
+                onPress={() => { setSelectedAmount(a); setCustomAmount(""); }}>
+                <Text className={`font-extrabold ${selectedAmount === a ? "text-white" : "text-[#111827] dark:text-white"}`}>₱{a.toLocaleString()}</Text>
               </TouchableOpacity>
             ))}
-
-            {/* Custom Amount Button */}
-            <TouchableOpacity
-              onPress={() => setSelectedAmount("custom")}
-              className={`w-[48%] py-4 rounded-2xl border-2 mb-3 items-center ${
-                selectedAmount === "custom"
-                  ? "bg-primary border-primary dark:bg-emerald-700 dark:border-emerald-700"
-                  : "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-              }`}
-            >
-              <Text
-                className={`font-bold text-lg ${
-                  selectedAmount === "custom"
-                    ? "text-white"
-                    : "text-darkBlue dark:text-white"
-                }`}
-              >
-                Custom
-              </Text>
+            <TouchableOpacity className={`rounded-2xl px-5 py-3 ${selectedAmount === "custom" ? "bg-[#1E6B45]" : "bg-white border border-[#DCE8E1] dark:bg-gray-800"}`}
+              onPress={() => setSelectedAmount("custom")}>
+              <Text className={`font-extrabold ${selectedAmount === "custom" ? "text-white" : "text-[#111827] dark:text-white"}`}>Custom</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Custom Amount Input Field */}
           {selectedAmount === "custom" && (
-            <View className="mb-6">
-              <View className="flex-row items-center bg-white dark:bg-gray-800 border-2 border-primary rounded-2xl px-4 py-2">
-                <Text className="text-2xl font-bold text-darkBlue dark:text-white mr-2">
-                  ₱
-                </Text>
-                <TextInput
-                  className="flex-1 text-2xl font-bold text-darkBlue dark:text-white py-2"
-                  placeholder="0"
-                  placeholderTextColor="#AAAAAA"
-                  keyboardType="numeric"
-                  value={customAmount}
-                  onChangeText={setCustomAmount}
-                  autoFocus // Automatically opens keyboard when selected
-                />
-              </View>
-            </View>
+            <TextInput value={customAmount} onChangeText={setCustomAmount} keyboardType="numeric"
+              placeholder="Enter amount (PHP)" placeholderTextColor="#9CA3AF"
+              className="mb-5 rounded-2xl border border-[#DCE8E1] bg-white px-4 py-4 text-[#111827] dark:bg-gray-800 dark:text-white" />
           )}
 
-          {/* Payment Method Mockup */}
-          <Text className="text-lg font-bold text-darkBlue dark:text-white mb-4 mt-2">
-            Payment Method
-          </Text>
-          <View className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-2 shadow-sm mb-4">
-            {/* GCash */}
-            <TouchableOpacity
-              onPress={() => setSelectedMethod("gcash")}
-              className="flex-row items-center justify-between p-4 border-b border-gray-50 dark:border-gray-700"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full items-center justify-center">
-                  <Ionicons name="phone-portrait" size={20} color="#3B82F6" />
+          <Text className="mb-3 font-extrabold text-[#111827] dark:text-white">Payment method</Text>
+          <View className="mb-6 gap-3">
+            {methods.map(m => (
+              <TouchableOpacity key={m.key} className={`flex-row items-center rounded-2xl border p-4 ${selectedMethod === m.key ? "border-[#1E6B45] bg-[#EAF4EE]" : "border-[#DCE8E1] bg-white dark:bg-gray-800"}`}
+                onPress={() => setSelectedMethod(m.key)}>
+                <View className={`h-5 w-5 rounded-full border-2 items-center justify-center mr-3 ${selectedMethod === m.key ? "border-[#1E6B45]" : "border-[#DCE8E1]"}`}>
+                  {selectedMethod === m.key && <View className="h-2.5 w-2.5 rounded-full bg-[#1E6B45]" />}
                 </View>
-                <Text className="text-darkBlue dark:text-white font-bold ml-4 text-base">
-                  GCash
-                </Text>
-              </View>
-              <Ionicons
-                name={
-                  selectedMethod === "gcash"
-                    ? "radio-button-on"
-                    : "radio-button-off"
-                }
-                size={24}
-                color={selectedMethod === "gcash" ? "#2D6A4F" : "#D1D5DB"}
-              />
-            </TouchableOpacity>
-
-            {/* Credit/Debit Card */}
-            <TouchableOpacity
-              onPress={() => setSelectedMethod("card")}
-              className="flex-row items-center justify-between p-4"
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-full items-center justify-center">
-                  <Ionicons name="card" size={20} color="#F97316" />
-                </View>
-                <Text className="text-darkBlue dark:text-white font-bold ml-4 text-base">
-                  Credit / Debit Card
-                </Text>
-              </View>
-              <Ionicons
-                name={
-                  selectedMethod === "card"
-                    ? "radio-button-on"
-                    : "radio-button-off"
-                }
-                size={24}
-                color={selectedMethod === "card" ? "#2D6A4F" : "#D1D5DB"}
-              />
-            </TouchableOpacity>
+                <Text className={`font-bold ${selectedMethod === m.key ? "text-[#1E6B45]" : "text-[#111827] dark:text-white"}`}>{m.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        </ScrollView>
 
-        {/* Bottom Sticky Button */}
-        <View
-          className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-4 ${
-            Platform.OS === "ios" ? "pb-8" : ""
-          }`}
-        >
-          <TouchableOpacity
-            className="w-full bg-primary py-4 rounded-xl items-center shadow-sm"
-            onPress={handleDonate}
-          >
-            <Text className="text-white font-bold text-lg">
-              Donate ₱
-              {selectedAmount === "custom"
-                ? customAmount || "0"
-                : selectedAmount}
-            </Text>
+          <View className="mb-4 rounded-2xl bg-[#F4F2EE] p-4">
+            <View className="flex-row justify-between">
+              <Text className="font-bold text-[#6B7280]">Donation amount</Text>
+              <Text className="font-extrabold text-[#111827] dark:text-white">₱{finalAmount > 0 ? finalAmount.toLocaleString() : "—"}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity className="rounded-2xl bg-[#1E6B45] py-4" onPress={handleDonate} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text className="text-center font-extrabold text-white">Donate ₱{finalAmount > 0 ? finalAmount.toLocaleString() : "—"}</Text>}
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

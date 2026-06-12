@@ -20,6 +20,11 @@ export default function Favorites() {
           <Text className="text-[#6B7280] dark:text-gray-400 mt-2">Keep track of pets you want to revisit.</Text>
         </View>
 
+        <TouchableOpacity className="mb-5 flex-row items-center justify-center rounded-2xl bg-[#1E6B45] py-4" onPress={() => router.push("/compare-pets" as any)}>
+          <Ionicons name="git-compare-outline" size={20} color="white" />
+          <Text className="ml-2 font-extrabold text-white">Compare Saved Pets</Text>
+        </TouchableOpacity>
+
         <View className="gap-4">
           {savedPets.map((pet) => (
             <TouchableOpacity

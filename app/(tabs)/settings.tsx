@@ -179,7 +179,7 @@ export default function Settings() {
 
         <View className="rounded-3xl bg-[#1E6B45] p-6 mb-6">
           <Text className="text-xl font-extrabold text-white">Get in Touch</Text>
-          <Text className="mt-1 mb-5 text-sm text-white/80">We're here to help you and your pets.</Text>
+          <Text className="mt-1 mb-5 text-sm text-white/80">We&apos;re here to help you and your pets.</Text>
           <Text className="text-white font-semibold mb-2">{contactInfo.address}</Text>
           <Text className="text-white font-semibold mb-2">{contactInfo.phone}</Text>
           <Text className="text-white font-semibold">{contactInfo.email}</Text>

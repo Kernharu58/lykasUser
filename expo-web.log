@@ -1,0 +1,12 @@
+
+> lykas_user@1.0.0 web
+> expo start --web --port 8082 --clear
+
+env: load .env
+env: export EXPO_PUBLIC_GOOGLE_CLIENT_ID EXPO_PUBLIC_ANDROID_CLIENT_ID EXPO_PUBLIC_IOS_CLIENT_ID EXPO_PUBLIC_API_URL
+Starting project at C:\Users\sunga\OneDrive\Desktop\capstoneProject\lykasUser
+React Compiler enabled
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8082
+Logs for your project will appear below.

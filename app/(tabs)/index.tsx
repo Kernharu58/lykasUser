@@ -32,6 +32,14 @@ const fallbackPets: Pet[] = [
 ];
 
 const categories = ["All", "Dog", "Cat", "Rabbit", "Other"];
+const shortcuts = [
+  { label: "Baby Book", icon: "book-outline", path: "/baby-book/demo-emma" },
+  { label: "Foster Trial", icon: "home-outline", path: "/foster-dashboard" },
+  { label: "Documents", icon: "document-text-outline", path: "/documents" },
+  { label: "Payments", icon: "card-outline", path: "/payments" },
+  { label: "Appointments", icon: "calendar-outline", path: "/my-appointments" },
+  { label: "Emergency", icon: "alert-circle-outline", path: "/emergency-report" },
+];
 
 export default function Discover() {
   const router = useRouter();
@@ -129,6 +137,17 @@ export default function Discover() {
               <Text className="text-center font-bold text-white">Donate</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View className="mt-6 flex-row flex-wrap justify-between">
+          {shortcuts.map((item) => (
+            <TouchableOpacity key={item.label} className="mb-3 w-[31%] items-center rounded-3xl border border-[#DCE8E1] bg-white p-3 dark:bg-gray-800 dark:border-gray-700" onPress={() => router.push(item.path as any)}>
+              <View className="h-10 w-10 items-center justify-center rounded-full bg-[#EAF4EE]">
+                <Ionicons name={item.icon as any} size={20} color="#1E6B45" />
+              </View>
+              <Text className="mt-2 text-center text-xs font-extrabold text-[#111827] dark:text-white">{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <View className="mt-7 mb-4 flex-row items-center justify-between">

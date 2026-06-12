@@ -37,18 +37,29 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="pets/[id]" />
         <Stack.Screen name="appointments/index" />
-        <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
+        <Stack.Screen name="application-details/[id]" />
+        <Stack.Screen name="foster-dashboard" />
+        <Stack.Screen name="monitoring-report" />
+        <Stack.Screen name="health/[petId]" />
+        <Stack.Screen name="documents" />
+        <Stack.Screen name="payments" />
+        <Stack.Screen name="volunteer-portal" />
+        <Stack.Screen name="compare-pets" />
+        <Stack.Screen name="emergency-report" />
+        <Stack.Screen name="my-appointments" />
         <Stack.Screen name="favorites" />
-        <Stack.Screen name="my-pets" />`r`n        <Stack.Screen name="notifications" />`r`n        <Stack.Screen name="baby-book/[petId]" />`r`n        <Stack.Screen name="foster/[petId]" />
-        
-        {/* 👉 Add this line right here! */}
-        <Stack.Screen name="donate" options={{ presentation: "modal" }} /> 
+        <Stack.Screen name="my-pets" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="baby-book/[petId]" />
+        <Stack.Screen name="foster/[petId]" />
+        <Stack.Screen name="donate" options={{ presentation: "modal" }} />
+        <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
       </Stack>
     </AuthProvider>
   );
 }
-

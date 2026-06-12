@@ -59,7 +59,7 @@ export default function ForgotPasswordScreen() {
                 Forgot Password?
               </Text>
               <Text className="text-slate-500 text-base">
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </Text>
             </View>
 
@@ -70,7 +70,7 @@ export default function ForgotPasswordScreen() {
                     Check your email
                   </Text>
                   <Text className="text-emerald-800 text-sm">
-                    If an account exists with this email, you'll receive a password reset link shortly. The link will expire in 1 hour.
+                    If an account exists with this email, you&apos;ll receive a password reset link shortly. The link will expire in 1 hour.
                   </Text>
                 </View>
 
