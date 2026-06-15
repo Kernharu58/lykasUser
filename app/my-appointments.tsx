@@ -1,68 +1,217 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../utils/api";
 
-const appointments = [
-  { title: "Adoption Interview", date: "June 12, 2026 - 10:30 AM", status: "Confirmed", icon: "videocam-outline" },
-  { title: "Home Visit", date: "June 16, 2026 - 2:00 PM", status: "Pending", icon: "home-outline" },
-];
+const TAB_OPTIONS = ["All", "Interviews", "Home Visits", "Appointments"];
+
+const statusColor: Record<string, string> = {
+  scheduled:    "#E8A020",
+  rescheduled:  "#E8A020",
+  confirmed:    "#1E6B45",
+  completed:    "#6B7280",
+  cancelled:    "#EF4444",
+  "no-show":    "#EF4444",
+  passed:       "#1E6B45",
+  failed:       "#EF4444",
+};
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString("en-PH", {
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+  });
+}
+function formatTime(d: string) {
+  return new Date(d).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" });
+}
 
 export default function MyAppointments() {
   const router = useRouter();
+  const [tab, setTab]               = useState("All");
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [homeVisits, setHomeVisits] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAll = async () => {
+    try {
+      const [intRes, hvRes, apptRes] = await Promise.allSettled([
+        api.get("/interviews/my"),
+        api.get("/home-visits/my"),
+        api.get("/appointments"),
+      ]);
+      if (intRes.status  === "fulfilled") setInterviews(intRes.value.data    || []);
+      if (hvRes.status   === "fulfilled") setHomeVisits(hvRes.value.data     || []);
+      if (apptRes.status === "fulfilled") setAppointments(apptRes.value.data || []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); setRefreshing(false); }
+  };
+
+  useFocusEffect(useCallback(() => { fetchAll(); }, []));
+
+  // Unified list for "All" tab
+  const allItems = [
+    ...interviews.map(i  => ({ ...i, _kind: "interview" })),
+    ...homeVisits.map(hv => ({ ...hv, _kind: "homevisit" })),
+    ...appointments.map(a => ({ ...a, _kind: "appointment" })),
+  ].sort((a, b) => {
+    const da = new Date(a.scheduledDate || a.date || a.createdAt).getTime();
+    const db = new Date(b.scheduledDate || b.date || b.createdAt).getTime();
+    return da - db;
+  });
+
+  const visibleItems =
+    tab === "All"          ? allItems :
+    tab === "Interviews"   ? interviews.map(i  => ({ ...i,  _kind: "interview"   })) :
+    tab === "Home Visits"  ? homeVisits.map(hv => ({ ...hv, _kind: "homevisit"   })) :
+                             appointments.map(a  => ({ ...a,  _kind: "appointment" }));
+
+  const upcomingCount = allItems.filter(
+    i => !["completed","cancelled","no-show"].includes(i.status)
+  ).length;
+
+  if (loading) return (
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
+      <ActivityIndicator size="large" color="#1E6B45" />
+    </SafeAreaView>
+  );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
-      <View className="flex-row items-center px-6 mt-4 mb-6">
-        <TouchableOpacity onPress={() => router.back()} className="flex-row items-center">
-          <Ionicons name="arrow-back" size={20} color="#2D6A4F" />
-          <Text className="text-primary font-bold ml-1">Back</Text>
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+      {/* Header */}
+      <View className="flex-row items-center px-6 mt-4 mb-5">
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800">
+          <Ionicons name="arrow-back" size={20} color="#1E6B45" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold text-darkBlue dark:text-white ml-auto mr-auto">Appointments</Text>
-        <View style={{ width: 60 }} />
+        <View className="ml-4">
+          <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">My Schedule</Text>
+          <Text className="text-xs font-bold text-[#6B7280]">{upcomingCount} upcoming</Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}>
-        <View className="mb-5 rounded-3xl bg-white p-5 border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
-          <Text className="text-lg font-extrabold text-darkBlue dark:text-white">Calendar View</Text>
-          <View className="mt-4 flex-row justify-between">
-            {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, index) => (
-              <View key={day} className={`h-14 w-12 items-center justify-center rounded-2xl ${index === 2 ? "bg-primary" : "bg-green-50 dark:bg-gray-700"}`}>
-                <Text className={`text-xs font-bold ${index === 2 ? "text-white" : "text-primary"}`}>{day}</Text>
-                <Text className={`font-extrabold ${index === 2 ? "text-white" : "text-darkBlue dark:text-white"}`}>{8 + index}</Text>
-              </View>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchAll(); }}
+            colors={["#1E6B45"]}
+          />
+        }
+      >
+        {/* Tabs */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6 mb-5">
+          <View className="flex-row gap-2">
+            {TAB_OPTIONS.map(t => (
+              <TouchableOpacity
+                key={t}
+                onPress={() => setTab(t)}
+                className={`rounded-full px-4 py-2 ${tab === t ? "bg-[#1E6B45]" : "bg-white border border-[#DCE8E1] dark:bg-gray-800"}`}>
+                <Text className={`text-xs font-extrabold ${tab === t ? "text-white" : "text-[#6B7280] dark:text-gray-300"}`}>{t}</Text>
+              </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </ScrollView>
 
-        <View className="mb-5 flex-row gap-3">
-          <TouchableOpacity className="flex-1 rounded-2xl bg-primary py-4">
-            <Text className="text-center font-extrabold text-white">Interviews</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-1 rounded-2xl border border-primary py-4">
-            <Text className="text-center font-extrabold text-primary">Home Visits</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="gap-4">
-          {appointments.map((item) => (
-            <View key={item.title} className="rounded-3xl border border-gray-100 bg-white p-5 dark:bg-gray-800 dark:border-gray-700">
-              <View className="flex-row items-center">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-green-50">
-                  <Ionicons name={item.icon as any} size={23} color="#2D6A4F" />
-                </View>
-                <View className="ml-4 flex-1">
-                  <Text className="text-lg font-extrabold text-darkBlue dark:text-white">{item.title}</Text>
-                  <Text className="text-sm text-neutral dark:text-gray-400">{item.date}</Text>
-                </View>
-                <Text className={`text-xs font-extrabold ${item.status === "Confirmed" ? "text-primary" : "text-amber-500"}`}>{item.status}</Text>
-              </View>
-              <TouchableOpacity className="mt-4 rounded-2xl border border-primary py-3" onPress={() => Alert.alert("Reschedule request sent", "Staff will review your preferred schedule.")}>
-                <Text className="text-center font-extrabold text-primary">Request Reschedule</Text>
-              </TouchableOpacity>
+        <View className="px-6 gap-4">
+          {visibleItems.length === 0 ? (
+            <View className="items-center mt-16">
+              <Ionicons name="calendar-outline" size={64} color="#DCE8E1" />
+              <Text className="mt-4 text-lg font-extrabold text-[#111827] dark:text-white">No appointments found</Text>
+              <Text className="mt-2 text-sm text-[#6B7280] text-center">
+                Your interviews, home visits, and appointments will appear here.
+              </Text>
             </View>
-          ))}
+          ) : (
+            visibleItems.map((item, idx) => {
+              const kind       = item._kind;
+              const dateStr    = item.scheduledDate || item.date;
+              const statusKey  = item.result && item.result !== "pending" ? item.result : item.status;
+              const color      = statusColor[statusKey] || "#6B7280";
+
+              const icon =
+                kind === "interview"   ? "mic-outline"      :
+                kind === "homevisit"   ? "home-outline"     :
+                                         "calendar-outline";
+
+              const kindLabel =
+                kind === "interview"   ? "Adoption Interview"  :
+                kind === "homevisit"   ? "Home Visit"          :
+                                         item.type || "Appointment";
+
+              const subtitle =
+                kind === "interview"   ? `${item.method || "TBD"} · ${item.location || "Location TBD"}` :
+                kind === "homevisit"   ? (item.address || "Address TBD") :
+                                         (item.description || "");
+
+              return (
+                <View
+                  key={`${kind}-${item._id ?? idx}`}
+                  className="rounded-3xl border border-[#DCE8E1] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  {/* Kind + status */}
+                  <View className="mb-3 flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <View className="h-9 w-9 items-center justify-center rounded-full bg-[#EAF4EE]">
+                        <Ionicons name={icon as any} size={18} color="#1E6B45" />
+                      </View>
+                      <Text className="font-extrabold text-[#111827] dark:text-white">{kindLabel}</Text>
+                    </View>
+                    <View
+                      className="rounded-full px-3 py-1"
+                      style={{ backgroundColor: color + "20" }}>
+                      <Text className="text-xs font-bold capitalize" style={{ color }}>{statusKey}</Text>
+                    </View>
+                  </View>
+
+                  {/* Date / time */}
+                  {dateStr && (
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <Ionicons name="time-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-[#6B7280]">
+                        {formatDate(dateStr)} · {formatTime(dateStr)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Subtitle */}
+                  {subtitle ? (
+                    <View className="flex-row items-center gap-2">
+                      <Ionicons name="location-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-[#6B7280] flex-1" numberOfLines={1}>{subtitle}</Text>
+                    </View>
+                  ) : null}
+
+                  {/* Pet name */}
+                  {item.pet?.name && (
+                    <View className="mt-2 flex-row items-center gap-2">
+                      <Ionicons name="paw-outline" size={14} color="#6B7280" />
+                      <Text className="text-sm text-[#6B7280]">{item.pet.name}</Text>
+                    </View>
+                  )}
+
+                  {/* Notes from result */}
+                  {item.notes && (
+                    <View className="mt-3 rounded-xl bg-[#F4F2EE] p-3 dark:bg-gray-700">
+                      <Text className="text-xs text-[#6B7280] dark:text-gray-300">{item.notes}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
