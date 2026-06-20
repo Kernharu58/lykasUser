@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
 
 const statusColor: Record<string, string> = {
@@ -33,13 +33,15 @@ export default function MyApplications() {
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchApplications = async () => {
     try {
+      setError(null);
       const res = await api.get("/applications/my");
       setApplications(res.data);
     } catch (err: any) {
-      Alert.alert("Error", err.response?.data?.message || "Could not load applications.");
+      setError(err.response?.data?.message || "Could not load applications.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,8 +69,8 @@ export default function MyApplications() {
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <LoadingState message="Loading applications..." />
     </SafeAreaView>
   );
 
@@ -83,15 +85,16 @@ export default function MyApplications() {
           <Text className="text-[#6B7280] dark:text-gray-400 mt-2">Transparent status tracking from submission to decision.</Text>
         </View>
 
-        {applications.length === 0 ? (
-          <View className="items-center mt-16">
-            <Ionicons name="clipboard-outline" size={64} color="#DCE8E1" />
-            <Text className="mt-4 text-lg font-extrabold text-[#111827] dark:text-white">No applications yet</Text>
-            <Text className="mt-2 text-sm text-[#6B7280] text-center">Browse pets and apply for adoption to get started.</Text>
-            <TouchableOpacity className="mt-6 rounded-2xl bg-[#1E6B45] px-8 py-4" onPress={() => router.push("/(tabs)/adopt" as any)}>
-              <Text className="font-extrabold text-white">Browse Pets</Text>
-            </TouchableOpacity>
-          </View>
+        {error ? (
+          <ErrorState message={error} onAction={fetchApplications} />
+        ) : applications.length === 0 ? (
+          <EmptyState
+            title="No applications yet"
+            message="Browse pets and apply for adoption to get started."
+            icon="clipboard-outline"
+            actionLabel="Browse Pets"
+            onAction={() => router.push("/(tabs)/adopt" as any)}
+          />
         ) : (
           <View className="gap-4">
             {applications.map((app) => {

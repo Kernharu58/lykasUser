@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
 
 const categoryColors: Record<string, string> = {
@@ -21,19 +22,25 @@ export default function Events() {
   const [mode, setMode] = useState<"upcoming" | "completed">("upcoming");
   const [registering, setRegistering] = useState<string | null>(null);
   const [myRegistrations, setMyRegistrations] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = async () => {
     try {
+      setError(null);
       const [eventsRes, myRes] = await Promise.allSettled([
         api.get(`/events?status=${mode === "upcoming" ? "upcoming" : "completed"}`),
         api.get("/events/my-registrations"),
       ]);
       if (eventsRes.status === "fulfilled") setEvents(eventsRes.value.data.events || []);
+      else setError("Could not load community events.");
       if (myRes.status === "fulfilled") {
         const ids = new Set<string>(myRes.value.data.map((r: any) => r.event?._id || r.event));
         setMyRegistrations(ids);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setError("Could not load community events.");
+    }
     finally { setLoading(false); setRefreshing(false); }
   };
 
@@ -57,8 +64,8 @@ export default function Events() {
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <LoadingState message="Loading events..." />
     </SafeAreaView>
   );
 
@@ -81,11 +88,14 @@ export default function Events() {
           ))}
         </View>
 
-        {events.length === 0 ? (
-          <View className="items-center mt-16">
-            <Ionicons name="calendar-outline" size={64} color="#DCE8E1" />
-            <Text className="mt-4 text-lg font-extrabold text-[#111827] dark:text-white">No events found</Text>
-          </View>
+        {error ? (
+          <ErrorState message={error} onAction={fetchEvents} />
+        ) : events.length === 0 ? (
+          <EmptyState
+            title="No events found"
+            message={mode === "upcoming" ? "Upcoming adoption drives and volunteer events will appear here." : "Completed events will appear here."}
+            icon="calendar-outline"
+          />
         ) : (
           <View className="gap-4">
             {events.map((event) => {

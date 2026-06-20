@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -10,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../components/PetCard";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
 
 interface Pet {
@@ -24,14 +24,17 @@ export default function Favorites() {
   const router = useRouter();
   const [favorites, setFavorites] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
+        setError(null);
         const response = await api.get("/auth/favorites");
         setFavorites(response.data);
       } catch (error) {
         console.error("Error fetching favorites:", error);
+        setError("Could not load your saved pets.");
       } finally {
         setLoading(false);
       }
@@ -62,10 +65,9 @@ export default function Favorites() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
       >
         {loading ? (
-          <View className="mt-20 items-center justify-center">
-            <ActivityIndicator size="large" color="#2D6A4F" />
-            <Text className="text-neutral mt-4">Loading your favorites...</Text>
-          </View>
+          <LoadingState message="Loading saved pets..." />
+        ) : error ? (
+          <ErrorState message={error} onAction={() => router.replace("/favorites" as any)} />
         ) : favorites.length > 0 ? (
           <View className="flex-row flex-wrap justify-between">
             {favorites.map((pet) => (
@@ -80,19 +82,13 @@ export default function Favorites() {
             ))}
           </View>
         ) : (
-          <View className="items-center mt-20">
-            <Ionicons name="heart-dislike-outline" size={64} color="#D1D5DB" />
-            <Text className="text-neutral dark:text-gray-400 text-center mt-4 text-base px-10">
-              You haven&apos;St liked any pets yet. Tap the heart on a
-              pet&apos;s profile to see them here!
-            </Text>
-            <TouchableOpacity
-              className="mt-8 bg-primary px-8 py-3 rounded-xl"
-              onPress={() => router.push("/(tabs)/adopt")}
-            >
-              <Text className="text-white font-bold">Find Pets</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            title="No saved pets yet"
+            message="Tap the heart on a pet profile to compare and revisit them here."
+            icon="heart-dislike-outline"
+            actionLabel="Find Pets"
+            onAction={() => router.push("/(tabs)/adopt")}
+          />
         )}
       </ScrollView>
     </SafeAreaView>

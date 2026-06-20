@@ -2,8 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   Text,
@@ -11,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
 
 const TAB_OPTIONS = ["All", "Interviews", "Home Visits", "Appointments"];
@@ -43,9 +42,11 @@ export default function MyAppointments() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAll = async () => {
     try {
+      setError(null);
       const [intRes, hvRes, apptRes] = await Promise.allSettled([
         api.get("/interviews/my"),
         api.get("/home-visits/my"),
@@ -54,7 +55,13 @@ export default function MyAppointments() {
       if (intRes.status  === "fulfilled") setInterviews(intRes.value.data    || []);
       if (hvRes.status   === "fulfilled") setHomeVisits(hvRes.value.data     || []);
       if (apptRes.status === "fulfilled") setAppointments(apptRes.value.data || []);
-    } catch (e) { console.error(e); }
+      if (intRes.status === "rejected" && hvRes.status === "rejected" && apptRes.status === "rejected") {
+        setError("Could not load your schedule.");
+      }
+    } catch (e) {
+      console.error(e);
+      setError("Could not load your schedule.");
+    }
     finally { setLoading(false); setRefreshing(false); }
   };
 
@@ -82,8 +89,8 @@ export default function MyAppointments() {
   ).length;
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <LoadingState message="Loading schedule..." />
     </SafeAreaView>
   );
 
@@ -127,14 +134,14 @@ export default function MyAppointments() {
         </ScrollView>
 
         <View className="px-6 gap-4">
-          {visibleItems.length === 0 ? (
-            <View className="items-center mt-16">
-              <Ionicons name="calendar-outline" size={64} color="#DCE8E1" />
-              <Text className="mt-4 text-lg font-extrabold text-[#111827] dark:text-white">No appointments found</Text>
-              <Text className="mt-2 text-sm text-[#6B7280] text-center">
-                Your interviews, home visits, and appointments will appear here.
-              </Text>
-            </View>
+          {error ? (
+            <ErrorState message={error} onAction={fetchAll} />
+          ) : visibleItems.length === 0 ? (
+            <EmptyState
+              title="No appointments found"
+              message="Your interviews, home visits, and appointments will appear here."
+              icon="calendar-outline"
+            />
           ) : (
             visibleItems.map((item, idx) => {
               const kind       = item._kind;

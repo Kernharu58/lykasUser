@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useCallback } from "react";
 import {
-  ActivityIndicator,
   Keyboard,
   RefreshControl,
   ScrollView,
@@ -14,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../../components/PetCard";
+import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
 
 interface Pet {
@@ -35,6 +35,7 @@ export default function Adopt() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined); // Added missing state
@@ -45,6 +46,7 @@ export default function Adopt() {
   const fetchFilteredPets = async () => {
     setLoading(true);
     try {
+      setError(null);
       // Pass the state variables directly to the API function
       const data = await getPets({ 
         category: selectedCategory, 
@@ -55,6 +57,7 @@ export default function Adopt() {
       setFilteredPets(data); // Also update filtered list for UI rendering
     } catch (error) {
       console.error("Failed to fetch pets", error);
+      setError("We could not load the pet list. Check your connection or try again.");
     } finally {
       setLoading(false);
       setRefreshing(false); // Ensure the refresh spinner stops
@@ -177,10 +180,9 @@ export default function Adopt() {
         }
       >
         {loading ? (
-          <View className="mt-20 items-center justify-center">
-            <ActivityIndicator size="large" color="#2D6A4F" />
-            <Text className="text-neutral mt-4 dark:text-gray-400">Finding furry friends...</Text>
-          </View>
+          <LoadingState message="Finding pets..." />
+        ) : error ? (
+          <ErrorState message={error} onAction={fetchFilteredPets} />
         ) : (
           <View className="flex-row flex-wrap justify-between">
             {filteredPets.length > 0 ? (
@@ -195,12 +197,13 @@ export default function Adopt() {
                 />
               ))
             ) : (
-              <View className="items-center w-full mt-10">
-                <Ionicons name="search-outline" size={48} color="#D1D5DB" />
-                <Text className="text-neutral text-center w-full mt-4 dark:text-gray-400 font-medium">
-                  No pets found matching &quot;{searchQuery}&quot;
-                </Text>
-              </View>
+              <EmptyState
+                title="No pets found"
+                message={searchQuery ? `No pets match "${searchQuery}". Try another name or breed.` : "No adoptable pets are available right now."}
+                icon="search-outline"
+                actionLabel="Clear Search"
+                onAction={clearSearch}
+              />
             )}
           </View>
         )}

@@ -1,8 +1,9 @@
 ﻿import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
 
 const filters = ["All", "Applications", "Messages", "Payments", "Events"];
@@ -43,13 +44,16 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("All");
+  const [error, setError] = useState<string | null>(null);
 
   const fetchNotifications = async () => {
     try {
+      setError(null);
       const res = await api.get("/notifications");
       setNotifications(res.data.notifications || []);
     } catch (e) {
       console.error(e);
+      setError("Could not load notifications. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,14 +66,20 @@ export default function Notifications() {
     try {
       await api.put("/notifications/read-all");
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Could not mark notifications as read.");
+    }
   };
 
   const markRead = async (id: string) => {
     try {
       await api.put(`/notifications/${id}/read`);
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Could not update this notification.");
+    }
   };
 
   const deleteAll = async () => {
@@ -79,7 +89,10 @@ export default function Notifications() {
         try {
           await api.delete("/notifications");
           setNotifications([]);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+          Alert.alert("Error", "Could not clear notifications.");
+        }
       }},
     ]);
   };
@@ -95,8 +108,8 @@ export default function Notifications() {
       });
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] items-center justify-center">
-      <ActivityIndicator size="large" color="#D4622A" />
+    <SafeAreaView className="flex-1 bg-[#FDFAF4] px-6">
+      <LoadingState message="Loading notifications..." />
     </SafeAreaView>
   );
 
@@ -133,11 +146,15 @@ export default function Notifications() {
           </TouchableOpacity>
         </View>
 
-        {visible.length === 0 ? (
-          <View className="items-center mt-16">
-            <Ionicons name="notifications-off-outline" size={64} color="#E8E4DC" />
-            <Text className="mt-4 text-lg font-extrabold text-[#2C2C2C] dark:text-white">No notifications</Text>
-          </View>
+        {error ? (
+          <ErrorState message={error} onAction={fetchNotifications} tone="warm" />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            title="No notifications"
+            message={filter === "All" ? "You're all caught up." : `No ${filter.toLowerCase()} notifications yet.`}
+            icon="notifications-off-outline"
+            tone="warm"
+          />
         ) : (
           <View className="gap-3">
             {visible.map((item) => (

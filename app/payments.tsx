@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
 
 const statusColor: Record<string, string> = { paid: "#1E6B45", pending: "#E8A020", failed: "#EF4444", refunded: "#6B7280" };
@@ -15,15 +16,20 @@ export default function Payments() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchPayments = async () => {
     try {
+      setError(null);
       const res = await api.get("/payments/my");
       const all: any[] = res.data.payments || [];
       setPayments(all);
       const fee = all.find(p => p.type === "adoption_fee" && p.status === "pending");
       setPendingFee(fee || null);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setError("Could not load payments and receipts.");
+    }
     finally { setLoading(false); setRefreshing(false); }
   };
 
@@ -47,12 +53,13 @@ export default function Payments() {
       fetchPayments();
     } catch (e: any) {
       console.error(e);
+      Alert.alert("Payment Error", e.response?.data?.message || "Could not start checkout. Please try again.");
     } finally { setPaying(false); }
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <LoadingState message="Loading payments..." />
     </SafeAreaView>
   );
 
@@ -69,8 +76,12 @@ export default function Payments() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPayments(); }} colors={["#1E6B45"]} />}
       >
+        {error ? (
+          <ErrorState message={error} onAction={fetchPayments} />
+        ) : null}
+
         {/* Adoption Fee Card */}
-        <View className="rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800 mb-5">
+        {!error && <View className="rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800 mb-5">
           <Text className="text-xl font-extrabold text-[#111827] dark:text-white">Adoption Fee</Text>
           {[["Medical and vaccines", "PHP 1,500"], ["Microchip", "PHP 800"], ["Shelter care fee", "PHP 700"]].map(([label, value]) => (
             <View key={label} className="mt-4 flex-row justify-between">
@@ -86,15 +97,16 @@ export default function Payments() {
             {paying ? <ActivityIndicator color="#fff" />
               : <Text className="text-center font-extrabold text-white">Pay Now with PayMongo</Text>}
           </TouchableOpacity>
-        </View>
+        </View>}
 
         {/* Payment History */}
         <Text className="mb-3 text-xl font-extrabold text-[#111827] dark:text-white">Payment History</Text>
-        {payments.length === 0 ? (
-          <View className="items-center mt-8">
-            <Ionicons name="receipt-outline" size={48} color="#DCE8E1" />
-            <Text className="mt-3 text-[#6B7280]">No payments yet.</Text>
-          </View>
+        {!error && payments.length === 0 ? (
+          <EmptyState
+            title="No payments yet"
+            message="Adoption fees, donation receipts, and payment statuses will appear here."
+            icon="receipt-outline"
+          />
         ) : (
           <View className="gap-3">
             {payments.map(p => (

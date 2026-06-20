@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
 
 function daysUntil(date: string) {
@@ -13,16 +14,17 @@ function daysUntil(date: string) {
 export default function HealthOverview() {
   const router = useRouter();
   const { petId } = useLocalSearchParams<{ petId: string }>();
-  const [summary, setSummary]         = useState<any>(null);
   const [vaccinations, setVaccinations] = useState<any[]>([]);
   const [vetVisits, setVetVisits]     = useState<any[]>([]);
   const [records, setRecords]         = useState<any[]>([]);
   const [shelterSummary, setShelterSummary] = useState<any>(null);
   const [loading, setLoading]         = useState(true);
   const [refreshing, setRefreshing]   = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAll = async () => {
     try {
+      setError(null);
       const [medRes, shelterRes] = await Promise.allSettled([
         api.get(`/medical/summary/${petId}`),
         api.get(`/shelter-care/summary/${petId}`),
@@ -33,7 +35,13 @@ export default function HealthOverview() {
         setRecords(medRes.value.data.medicalRecords || []);
       }
       if (shelterRes.status === "fulfilled") setShelterSummary(shelterRes.value.data);
-    } catch (e) { console.error(e); }
+      if (medRes.status === "rejected" && shelterRes.status === "rejected") {
+        setError("Could not load health records.");
+      }
+    } catch (e) {
+      console.error(e);
+      setError("Could not load health records.");
+    }
     finally { setLoading(false); setRefreshing(false); }
   };
 
@@ -48,8 +56,8 @@ export default function HealthOverview() {
   const latestCondition = shelterSummary?.latestHealth?.condition;
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <LoadingState message="Loading health records..." />
     </SafeAreaView>
   );
 
@@ -69,8 +77,12 @@ export default function HealthOverview() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} colors={["#1E6B45"]} />}
       >
+        {error ? (
+          <ErrorState message={error} onAction={fetchAll} />
+        ) : null}
+
         {/* Vaccine countdown */}
-        {nextVaccine ? (
+        {!error && nextVaccine ? (
           <View className={`rounded-3xl p-5 mb-5 ${daysUntil(nextVaccine.nextDueDate) <= 7 ? "bg-red-500" : "bg-[#1E6B45]"}`}>
             <Text className="text-sm font-bold text-white/80">Next vaccine due</Text>
             <Text className="mt-1 text-4xl font-extrabold text-white">
@@ -78,15 +90,15 @@ export default function HealthOverview() {
             </Text>
             <Text className="mt-2 text-white/90">{nextVaccine.vaccineName} · {new Date(nextVaccine.nextDueDate).toLocaleDateString()}</Text>
           </View>
-        ) : (
+        ) : !error ? (
           <View className="rounded-3xl bg-[#1E6B45] p-5 mb-5">
             <Text className="text-sm font-bold text-white/80">Vaccination status</Text>
             <Text className="mt-1 text-2xl font-extrabold text-white">{vaccinations.length > 0 ? "All up to date ✓" : "No records yet"}</Text>
           </View>
-        )}
+        ) : null}
 
         {/* Quick stats */}
-        <View className="mb-5 flex-row gap-3">
+        {!error && <View className="mb-5 flex-row gap-3">
           <View className="flex-1 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
             <Text className="text-xs font-bold uppercase text-[#6B7280]">Weight</Text>
             <Text className="mt-2 text-xl font-extrabold text-[#111827] dark:text-white">{latestWeight || "—"}</Text>
@@ -99,7 +111,7 @@ export default function HealthOverview() {
             <Text className="text-xs font-bold uppercase text-[#6B7280]">Records</Text>
             <Text className="mt-2 text-xl font-extrabold text-[#111827] dark:text-white">{records.length}</Text>
           </View>
-        </View>
+        </View>}
 
         {/* Vaccinations */}
         {vaccinations.length > 0 && (
@@ -162,17 +174,17 @@ export default function HealthOverview() {
           </>
         )}
 
-        {vaccinations.length === 0 && vetVisits.length === 0 && records.length === 0 && (
-          <View className="items-center mt-10">
-            <Ionicons name="medical-outline" size={56} color="#DCE8E1" />
-            <Text className="mt-4 font-extrabold text-[#111827] dark:text-white">No health records yet</Text>
-            <Text className="mt-2 text-sm text-[#6B7280] text-center">Records will appear here once added by shelter staff.</Text>
-          </View>
+        {!error && vaccinations.length === 0 && vetVisits.length === 0 && records.length === 0 && (
+          <EmptyState
+            title="No health records yet"
+            message="Records will appear here once added by shelter staff."
+            icon="medical-outline"
+          />
         )}
 
-        <TouchableOpacity className="mt-4 rounded-2xl border border-[#1E6B45] py-4" onPress={() => router.push(`/baby-book/${petId}` as any)}>
+        {!error && <TouchableOpacity className="mt-4 rounded-2xl border border-[#1E6B45] py-4" onPress={() => router.push(`/baby-book/${petId}` as any)}>
           <Text className="text-center font-extrabold text-[#1E6B45]">Open Baby Book</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </ScrollView>
     </SafeAreaView>
   );
