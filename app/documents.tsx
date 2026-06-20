@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -123,13 +122,22 @@ export default function Documents() {
   };
 
   const pickDocument = async (docType: string) => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ["application/pdf", "image/*"],
-      copyToCacheDirectory: true,
-    });
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      await uploadFile(docType, asset.uri, asset.name, asset.mimeType || "application/octet-stream");
+    try {
+      const DocumentPicker = await import("expo-document-picker");
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "image/*"],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        await uploadFile(docType, asset.uri, asset.name, asset.mimeType || "application/octet-stream");
+      }
+    } catch (error) {
+      console.error("Document picker unavailable:", error);
+      Alert.alert(
+        "File picker unavailable",
+        "This development build does not include the document picker native module yet. Rebuild the app, or use Take Photo for now."
+      );
     }
   };
 
