@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, View } from "react-native";
 
 export default function TypingIndicator() {
   const dot1 = useRef(new Animated.Value(0)).current;
@@ -14,25 +15,22 @@ export default function TypingIndicator() {
           Animated.timing(dot, { toValue: -6, duration: 300, useNativeDriver: true }),
           Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: true }),
           Animated.delay(600),
-        ])
+        ]),
       );
-    bounce(dot1, 0).start();
-    bounce(dot2, 200).start();
-    bounce(dot3, 400).start();
-  }, []);
+
+    const animations = [bounce(dot1, 0), bounce(dot2, 200), bounce(dot3, 400)];
+    animations.forEach((animation) => animation.start());
+    return () => animations.forEach((animation) => animation.stop());
+  }, [dot1, dot2, dot3]);
 
   return (
-    <View className="flex-row items-end mb-4">
-      <View className="w-8 h-8 rounded-full bg-emerald-700 items-center justify-center mr-2 mb-1">
-        <Text style={{ fontSize: 14 }}>🐾</Text>
+    <View className="mb-4 flex-row items-end">
+      <View className="mb-1 mr-2 h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
+        <Ionicons name="paw" size={16} color="white" />
       </View>
-      <View className="flex-row items-center bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm gap-1">
+      <View className="flex-row items-center gap-1 rounded-2xl rounded-bl-sm border border-gray-100 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         {[dot1, dot2, dot3].map((dot, i) => (
-          <Animated.View
-            key={i}
-            style={{ transform: [{ translateY: dot }] }}
-            className="w-2 h-2 rounded-full bg-gray-400 mx-0.5"
-          />
+          <Animated.View key={i} style={{ transform: [{ translateY: dot }] }} className="mx-0.5 h-2 w-2 rounded-full bg-gray-400" />
         ))}
       </View>
     </View>

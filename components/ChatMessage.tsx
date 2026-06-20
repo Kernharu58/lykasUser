@@ -4,16 +4,18 @@ import { Text, View } from "react-native";
 
 interface ChatMessageProps {
   item: {
+    _id?: string;
     text: string;
     sender: string;
     time?: string;
     createdAt?: string;
+    pending?: boolean;
+    failed?: boolean;
   };
 }
 
 export default function ChatMessage({ item }: ChatMessageProps) {
-  // FIX: Added case-insensitive checking to ensure "User", "USER", and "user" all evaluate correctly
-const isUser = String(item.sender || '').toLowerCase() === "user";
+  const isUser = String(item.sender || "").toLowerCase() === "user";
 
   const messageTime =
     item.time ||
@@ -26,32 +28,28 @@ const isUser = String(item.sender || '').toLowerCase() === "user";
 
   return (
     <View className={`mb-4 w-full flex-row items-end ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* Shelter avatar — only shown for shelter/admin (left) messages */}
       {!isUser && (
-        <View className="w-8 h-8 rounded-full bg-emerald-700 items-center justify-center mr-2 mb-5">
-          <Text style={{ fontSize: 14 }}>🐾</Text>
+        <View className="mb-5 mr-2 h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
+          <Ionicons name="paw" size={16} color="white" />
         </View>
       )}
 
       <View className="max-w-[75%]">
         <View
-          className={`px-4 py-3 rounded-2xl shadow-sm ${
+          className={`rounded-2xl px-4 py-3 shadow-sm ${
             isUser
-              ? "bg-emerald-800 rounded-br-sm"
-              : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-sm"
+              ? "rounded-br-sm bg-emerald-800"
+              : "rounded-bl-sm border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
           }`}
         >
-          <Text className={`text-base leading-6 ${isUser ? "text-white" : "text-gray-900 dark:text-white"}`}>
-            {item.text}
-          </Text>
+          <Text className={`text-base leading-6 ${isUser ? "text-white" : "text-gray-900 dark:text-white"}`}>{item.text}</Text>
         </View>
 
-        <View className={`flex-row items-center mt-1 gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
+        <View className={`mt-1 flex-row items-center gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
           <Text className="text-[10px] text-gray-400">{messageTime}</Text>
-          {/* Double checkmark only for user's own sent messages */}
-          {isUser && (
-            <Ionicons name="checkmark-done" size={12} color="#4ade80" />
-          )}
+          {isUser && item.failed ? <Ionicons name="alert-circle" size={12} color="#ef4444" /> : null}
+          {isUser && item.pending ? <Ionicons name="time-outline" size={12} color="#9ca3af" /> : null}
+          {isUser && !item.pending && !item.failed ? <Ionicons name="checkmark-done" size={12} color="#4ade80" /> : null}
         </View>
       </View>
     </View>
