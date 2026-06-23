@@ -117,14 +117,20 @@ export default function PetProfile() {
       </ScrollView>
 
       <View className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-[#E8E4DC] dark:border-gray-800 px-6 py-4 flex-row ${Platform.OS === "ios" ? "pb-8" : ""}`}>
-        <TouchableOpacity className="bg-white dark:bg-gray-800 border-2 border-[#D4622A] rounded-xl justify-center items-center flex-1 mr-3" onPress={() => router.push(`/foster/${id}` as any)}>
+        {/* Foster routes through the same vetting form, pre-set to type: foster */}
+        <TouchableOpacity
+          className="bg-white dark:bg-gray-800 border-2 border-[#D4622A] rounded-xl justify-center items-center flex-1 mr-3 py-4"
+          onPress={() => router.push(`/pets/apply/${id}?type=foster` as any)}
+        >
           <Text className="text-[#D4622A] font-bold">Foster</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#D4622A] py-4 rounded-xl flex-1 items-center shadow-sm" onPress={() => router.push(`/pets/apply/${id}`)}>
+        <TouchableOpacity
+          className="bg-[#D4622A] py-4 rounded-xl flex-1 items-center shadow-sm"
+          onPress={() => router.push(`/pets/apply/${id}`)}
+        >
           <Text className="text-white font-bold text-base">Adopt</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
