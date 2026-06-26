@@ -6,7 +6,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../utils/api";
 
 const conditionOptions = ["Excellent", "Good", "Fair", "Poor"];
-const options3 = ["Excellent", "Normal", "Needs attention"];
 
 export default function MonitoringReport() {
   const router = useRouter();
@@ -77,6 +76,30 @@ export default function MonitoringReport() {
         {activeFoster && (
           <View className="mb-5 rounded-2xl bg-[#EAF4EE] p-4">
             <Text className="font-bold text-[#1E6B45]">Submitting for: {activeFoster.pet?.name}</Text>
+          </View>
+        )}
+
+        {/* BUG FIX: previously, if the adopter had no active foster trial,
+            `petId` was never populated and there was no way to pick a pet —
+            the fetched `myPets` list was loaded but never rendered, so the
+            form was a dead end for long-term post-adoption monitoring
+            reports. Show a picker built from the owned pets in that case. */}
+        {!activeFoster && (
+          <View className="mb-5">
+            <Text className="mb-2 font-extrabold text-[#111827] dark:text-white">Select Pet</Text>
+            {myPets.length === 0 ? (
+              <Text className="text-[#6B7280]">No adopted or fostered pets found on your account.</Text>
+            ) : (
+              <View className="flex-row flex-wrap gap-2">
+                {myPets.map((pet: any) => (
+                  <TouchableOpacity key={pet._id}
+                    className={`rounded-2xl px-4 py-3 ${petId === pet._id ? "bg-[#1E6B45]" : "bg-white border border-[#DCE8E1] dark:bg-gray-800"}`}
+                    onPress={() => setPetId(pet._id)}>
+                    <Text className={`font-extrabold ${petId === pet._id ? "text-white" : "text-[#6B7280]"}`}>{pet.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
