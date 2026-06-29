@@ -260,13 +260,13 @@ export default function AdoptionApplication() {
         {/* Bottom nav buttons */}
         <View
           className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t px-6 py-4"
-          style={{ borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
+          style={{borderTopWidth: 10, borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
         >
           <View className="flex-row gap-3">
             {step > 1 && (
               <TouchableOpacity
-                className="flex-1 rounded-2xl border py-4"
-                style={{ borderColor: accentColor }}
+                className="flex-1 rounded-2xl border py-5"
+                style={{ borderColor: accentColor , height: 56 }}
                 onPress={() => setStep((v) => v - 1)}
               >
                 <Text className="text-center font-extrabold" style={{ color: accentColor }}>Back</Text>

@@ -35,13 +35,13 @@ export default function LogIn() {
   const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "";
   const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "";
 
-const redirectUri = "com.kernharu.carepaws:/oauth2redirect/google";
+const GOOGLE_REDIRECT_URI = "com.kernharu.carepaws:/oauth2redirect/google";
 
 const [request, response, promptAsync] = Google.useAuthRequest({
   webClientId: WEB_CLIENT_ID,
   androidClientId: ANDROID_CLIENT_ID,
   iosClientId: IOS_CLIENT_ID,
-  redirectUri,
+  redirectUri: GOOGLE_REDIRECT_URI,
 });
 
   useEffect(() => {
