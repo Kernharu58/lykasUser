@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from 'expo-secure-store';
 import * as Google from "expo-auth-session/providers/google";
-import { makeRedirectUri } from "expo-auth-session";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -21,6 +20,7 @@ import * as WebBrowser from "expo-web-browser";
 
 WebBrowser.maybeCompleteAuthSession();
 
+
 export default function LogIn() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -35,13 +35,13 @@ export default function LogIn() {
   const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "";
   const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "";
 
+const redirectUri = "com.kernharu.carepaws:/oauth2redirect/google";
+
 const [request, response, promptAsync] = Google.useAuthRequest({
   webClientId: WEB_CLIENT_ID,
   androidClientId: ANDROID_CLIENT_ID,
   iosClientId: IOS_CLIENT_ID,
-  redirectUri: makeRedirectUri({
-    scheme: "com.kernharu.carepaws:/oauth2redirect/google"
-  }),
+  redirectUri,
 });
 
   useEffect(() => {
