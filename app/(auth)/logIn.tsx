@@ -35,15 +35,14 @@ export default function LogIn() {
   const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "";
   const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "";
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: WEB_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-    redirectUri: makeRedirectUri({
-      scheme: "carepaws",
-      path: "oauth2redirect/google",
-    }),
-  });
+const [request, response, promptAsync] = Google.useAuthRequest({
+  webClientId: WEB_CLIENT_ID,
+  androidClientId: ANDROID_CLIENT_ID,
+  iosClientId: IOS_CLIENT_ID,
+  redirectUri: makeRedirectUri({
+    scheme: "com.kernharu.carepaws:/oauth2redirect/google"
+  }),
+});
 
   useEffect(() => {
     if (response?.type === "success") {
