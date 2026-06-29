@@ -30,7 +30,6 @@ export default function RootLayout() {
         setColorScheme("light");
       }
     };
-
     loadThemePreference();
   }, [setColorScheme]);
 
@@ -41,13 +40,21 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="pets/[id]" />
+        {/* BUG FIX: Missing screens that exist in the file system */}
+        <Stack.Screen name="pets/apply/[id]" />
         <Stack.Screen name="appointments/index" />
+        <Stack.Screen name="appointments/apply/[id]" />
         <Stack.Screen name="application-details/[id]" />
         <Stack.Screen name="foster-dashboard" />
         <Stack.Screen name="monitoring-report" />
         <Stack.Screen name="health/[petId]" />
+        <Stack.Screen name="baby-book/[petId]" />
+        <Stack.Screen name="foster/[petId]" />
         <Stack.Screen name="documents" />
         <Stack.Screen name="payments" />
+        {/* FIX (Warning #3): Register payment callback screens for deep-link handling */}
+        <Stack.Screen name="payment/success" />
+        <Stack.Screen name="payment/cancel" />
         <Stack.Screen name="volunteer-portal" />
         <Stack.Screen name="compare-pets" />
         <Stack.Screen name="emergency-report" />
@@ -55,8 +62,10 @@ export default function RootLayout() {
         <Stack.Screen name="favorites" />
         <Stack.Screen name="my-pets" />
         <Stack.Screen name="notifications" />
-        <Stack.Screen name="baby-book/[petId]" />
-        <Stack.Screen name="foster/[petId]" />
+        {/* BUG FIX: Missing auth flow screens */}
+        <Stack.Screen name="verify-email" />
+        <Stack.Screen name="reset-password" />
+        <Stack.Screen name="forgot-password" />
         <Stack.Screen name="donate" options={{ presentation: "modal" }} />
         <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
       </Stack>

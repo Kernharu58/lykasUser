@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from 'expo-secure-store';
-import * as Google from "expo-auth-session/providers/google"; 
+import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react"; 
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,10 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
 import * as WebBrowser from "expo-web-browser";
 
-// Ensures the web browser closes automatically after Google login
 WebBrowser.maybeCompleteAuthSession();
-
-
 
 export default function LogIn() {
   const router = useRouter();
@@ -31,70 +28,61 @@ export default function LogIn() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { isLoading, userToken, setUserToken, setUser } = useAuth(); 
+  const { isLoading, userToken, setUserToken, setUser } = useAuth();
 
-// Update the variables and Google.useAuthRequest block in logIn.tsx:
+  // BUG FIX: Move constants inside component scope (was in outer scope before)
+  const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "";
+  const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "";
 
-// 👉 Pull from .env instead of hardcoding. Add fallback strings just in case during transition.
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "528938082763-19063pq62uklsq11u0fnbts83ck9s300.apps.googleusercontent.com";
-const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "528938082763-11ntud5qgc7c4621ek150octg4mbt17h.apps.googleusercontent.com";
-const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "528938082763-hscdu38la3la2dmh1hjr3b2t8cgi224b.apps.googleusercontent.com";
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: WEB_CLIENT_ID,
+    androidClientId: ANDROID_CLIENT_ID,
+    iosClientId: IOS_CLIENT_ID,
+    redirectUri: makeRedirectUri({
+      scheme: "carepaws",
+      path: "oauth2redirect/google",
+    }),
+  });
 
-const [request, response, promptAsync] = Google.useAuthRequest({
-  webClientId: WEB_CLIENT_ID,
-  androidClientId: ANDROID_CLIENT_ID,
-  iosClientId: IOS_CLIENT_ID, // FIX 4: Uncommented iOS
-  redirectUri: makeRedirectUri({
-    scheme: "carepaws",
-    path: "oauth2redirect/google",
-  }),
-});
+  useEffect(() => {
+    if (response?.type === "success") {
+      // BUG FIX: Check both idToken (PKCE) and id_token (implicit) locations
+      const idToken =
+        response.authentication?.idToken ||
+        response.params?.id_token ||
+        response.params?.id_token;
 
-
-  // 2. Listen for the Google response
-useEffect(() => {
-  if (response?.type === "success") {
-    // Safely check both places for the token
-    const id_token = response.authentication?.idToken || response.params?.id_token;
-    console.log("Redirect URI:", makeRedirectUri());
-
-    if (id_token) {
-      handleGoogleBackendLogin(id_token);
-    } else {
-      Alert.alert("Google Auth Error", "No ID Token returned from Google.");
+      if (idToken) {
+        handleGoogleBackendLogin(idToken);
+      } else {
+        Alert.alert("Google Auth Error", "No ID Token returned from Google.");
+      }
+    } else if (response?.type === "error") {
+      Alert.alert("Authentication Error", "Failed to authenticate with Google.");
     }
-  } else if (response?.type === "error") {
-    Alert.alert("Authentication Error", "Failed to authenticate with Google.");
-  }
-}, [response]);
+  }, [response]);
 
-  // 3. Send the ID Token to your Node.js Backend
   const handleGoogleBackendLogin = async (idToken: string) => {
     setLoading(true);
     try {
       const res = await api.post("/auth/google", { idToken });
 
-      // ✅ Store token in SecureStore FIRST, then update context
-      console.log("[GoogleLogin] Storing token in SecureStore...");
       await SecureStore.setItemAsync("userToken", res.data.token);
-      await SecureStore.setItemAsync("userName", res.data.user.displayName || res.data.user.name);
-      await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user)); 
-      
-      console.log("[GoogleLogin] Token stored successfully, updating context...");
+      await SecureStore.setItemAsync("userName", res.data.user.displayName || "");
+      await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user));
+
       setUser(res.data.user);
       setUserToken(res.data.token);
-
-      console.log("[GoogleLogin] Navigation to tabs...");
       router.replace("/(tabs)");
     } catch (error) {
-      console.error("[GoogleLogin] Backend Verification Error:", error);
+      console.error("[GoogleLogin] Error:", error);
       Alert.alert("Login Error", "Could not verify Google account with server.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 4. Standard Email/Password Login
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter your email and password.");
@@ -103,22 +91,16 @@ useEffect(() => {
 
     setLoading(true);
     try {
-      const response = await api.post("/auth/login", { email, password });
+      const res = await api.post("/auth/login", { email, password });
 
-      // ✅ Store token in SecureStore FIRST, then update context
-      console.log("[Login] Storing token in SecureStore...");
-      await SecureStore.setItemAsync("userToken", response.data.token);
-      await SecureStore.setItemAsync("userName", response.data.user.displayName || response.data.user.name);
-      await SecureStore.setItemAsync("userData", JSON.stringify(response.data.user));
-      
-      console.log("[Login] Token stored successfully, updating context...");
-      setUser(response.data.user);
-      setUserToken(response.data.token);
-      
-      console.log("[Login] Navigation to tabs...");
+      await SecureStore.setItemAsync("userToken", res.data.token);
+      await SecureStore.setItemAsync("userName", res.data.user.displayName || "");
+      await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user));
+
+      setUser(res.data.user);
+      setUserToken(res.data.token);
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.error("[Login] Login error:", error);
       const message = error.response?.data?.message || "Invalid credentials.";
       Alert.alert("Login Failed", message);
     } finally {
@@ -140,7 +122,7 @@ useEffect(() => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 justify-center px-8"
       >
-        {/* --- Logo & Branding --- */}
+        {/* Logo & Branding */}
         <View className="items-center mb-10">
           <View className="items-center mb-3">
             <View className="w-5 h-5 rounded-full bg-primary" />
@@ -150,10 +132,10 @@ useEffect(() => {
             </View>
           </View>
           <Text className="text-3xl font-bold text-primary mb-1">CarePaws</Text>
-          <Text className="text-neutral text-sm">Professional Pet Care</Text>
+          <Text className="text-neutral text-sm">Your Pet Adoption Companion</Text>
         </View>
 
-        {/* --- Input Fields --- */}
+        {/* Input Fields */}
         <View className="mb-6">
           <TextInput
             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 mb-4 text-darkBlue font-medium"
@@ -163,6 +145,7 @@ useEffect(() => {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
           />
 
           <View className="relative justify-center mb-2">
@@ -194,7 +177,7 @@ useEffect(() => {
           </TouchableOpacity>
         </View>
 
-        {/* --- Primary Actions --- */}
+        {/* Primary Actions */}
         <TouchableOpacity
           className="w-full bg-primary py-4 rounded-xl items-center mb-4 shadow-sm"
           onPress={handleLogin}
@@ -212,22 +195,22 @@ useEffect(() => {
           onPress={() => router.push("/(auth)/signUp")}
           disabled={loading}
         >
-          <Text className="text-primary font-bold text-base">Sign Up</Text>
+          <Text className="text-primary font-bold text-base">Create Account</Text>
         </TouchableOpacity>
 
-        {/* --- Divider --- */}
+        {/* Divider */}
         <View className="items-center mb-6">
           <Text className="text-neutral text-sm">Or continue with</Text>
         </View>
 
-        {/* --- Social Login --- */}
-        <TouchableOpacity 
+        {/* Google Sign In */}
+        <TouchableOpacity
           className="w-full bg-white border border-gray-200 py-4 rounded-xl flex-row justify-center items-center shadow-sm"
-          onPress={() => promptAsync()} 
+          onPress={() => promptAsync()}
           disabled={!request || loading}
         >
-          <Text className="text-green-500 font-bold text-lg mr-2">G</Text>
-          <Text className="text-darkBlue font-bold text-base">Google</Text>
+          <Text className="text-green-600 font-bold text-lg mr-2">G</Text>
+          <Text className="text-darkBlue font-bold text-base">Sign in with Google</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>

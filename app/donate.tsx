@@ -1,17 +1,51 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator, Alert, KeyboardAvoidingView, Linking,
+  Platform, ScrollView, Text, TextInput, TouchableOpacity, View
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../utils/api";
 
 const amounts = [500, 1000, 2500, 5000];
+
+// FIX (Critical #1): Method keys must match PayMongo accepted values
 const methods = [
-  { key: "gcash", label: "GCash" },
-  { key: "card", label: "Credit / Debit" },
-  { key: "paymaya", label: "Maya" },
-  { key: "grab_pay", label: "GrabPay" },
+  { key: "gcash",     label: "GCash" },
+  { key: "card",      label: "Credit / Debit" },
+  { key: "paymaya",   label: "Maya" },
+  { key: "grab_pay",  label: "GrabPay" },
 ];
+
+// FIX (Warning #3): Payment success screen shown after redirect back
+function PaymentSuccessScreen({ amount, onDone }: { amount: number; onDone: () => void }) {
+  return (
+    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900 items-center justify-center px-6">
+      <View className="items-center">
+        <View className="w-24 h-24 rounded-full bg-[#EAF4EE] items-center justify-center mb-6">
+          <Ionicons name="checkmark-circle" size={56} color="#1E6B45" />
+        </View>
+        <Text className="text-3xl font-extrabold text-[#111827] dark:text-white mb-2">Thank you!</Text>
+        <Text className="text-center text-[#6B7280] dark:text-gray-400 text-base mb-1">
+          Your donation of
+        </Text>
+        <Text className="text-2xl font-extrabold text-[#1E6B45] mb-4">
+          ₱{amount.toLocaleString()}
+        </Text>
+        <Text className="text-center text-[#6B7280] dark:text-gray-400 text-base mb-8">
+          has been received. Every peso helps us care for animals waiting for their forever home. 🐾
+        </Text>
+        <TouchableOpacity
+          className="w-full rounded-2xl bg-[#1E6B45] py-4"
+          onPress={onDone}
+        >
+          <Text className="text-center font-extrabold text-white text-base">Back to Home</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
 
 export default function Donate() {
   const router = useRouter();
@@ -19,8 +53,21 @@ export default function Donate() {
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("gcash");
   const [loading, setLoading] = useState(false);
+  // FIX (Warning #3): Track payment success state
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [confirmedAmount, setConfirmedAmount] = useState(0);
 
   const finalAmount = selectedAmount === "custom" ? Number(customAmount) : selectedAmount;
+
+  // FIX (Warning #3): Handle payment success screen done
+  if (paymentSuccess) {
+    return (
+      <PaymentSuccessScreen
+        amount={confirmedAmount}
+        onDone={() => router.replace("/(tabs)")}
+      />
+    );
+  }
 
   const handleDonate = async () => {
     if (!finalAmount || finalAmount <= 0) {
@@ -33,12 +80,24 @@ export default function Donate() {
         type: "donation",
         amount: finalAmount,
         description: `Donation to CarePaws Shelter — ₱${finalAmount}`,
+        // FIX (Critical #1): Pass the selected payment method to the backend
+        paymentMethod: selectedMethod,
         successUrl: "carepaws://payment/success",
         cancelUrl:  "carepaws://payment/cancel",
       });
       const { checkoutUrl } = res.data;
       if (checkoutUrl) {
+        // FIX (Warning #3): Listen for the deep-link callback and show success screen
+        const handleUrl = ({ url }: { url: string }) => {
+          if (url?.includes("payment/success")) {
+            setConfirmedAmount(finalAmount);
+            setPaymentSuccess(true);
+          }
+        };
+        const sub = Linking.addEventListener("url", handleUrl);
         await Linking.openURL(checkoutUrl);
+        // Clean up listener after a reasonable window (PayMongo checkout takes ≤10 min)
+        setTimeout(() => sub.remove(), 600_000);
       }
     } catch (err: any) {
       Alert.alert("Payment Error", err.response?.data?.message || "Could not initiate payment.");
@@ -97,9 +156,13 @@ export default function Donate() {
           </View>
 
           <View className="mb-4 rounded-2xl bg-[#F4F2EE] p-4">
-            <View className="flex-row justify-between">
+            <View className="flex-row justify-between mb-1">
               <Text className="font-bold text-[#6B7280]">Donation amount</Text>
               <Text className="font-extrabold text-[#111827] dark:text-white">₱{finalAmount > 0 ? finalAmount.toLocaleString() : "—"}</Text>
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="font-bold text-[#6B7280]">Payment method</Text>
+              <Text className="font-bold text-[#111827] dark:text-white">{methods.find(m => m.key === selectedMethod)?.label}</Text>
             </View>
           </View>
 

@@ -10,42 +10,79 @@ interface PetCardProps {
   status?: string;
 }
 
-export default function PetCard({ id, name, breed, image }: PetCardProps) {
+// Maps pet status → pill colours
+const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
+  Available: { bg: "#1E6B45", text: "#FFFFFF" },
+  Fostered:  { bg: "#E8A020", text: "#FFFFFF" },
+  Adopted:   { bg: "#6B7280", text: "#FFFFFF" },
+};
+
+function StatusPill({ status }: { status: string }) {
+  const style = STATUS_STYLE[status] ?? { bg: "#6B7280", text: "#FFFFFF" };
   return (
-    // We use a strict inline style for width to guarantee a perfect 2-column grid
+    <View
+      style={{
+        position: "absolute",
+        top: 8,
+        right: 8,
+        backgroundColor: style.bg,
+        borderRadius: 999,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+      }}
+    >
+      <Text style={{ color: style.text, fontSize: 10, fontWeight: "700" }}>
+        {status}
+      </Text>
+    </View>
+  );
+}
+
+export default function PetCard({ id, name, breed, image, status }: PetCardProps) {
+  return (
     <View
       style={{ width: "48%" }}
-      className="bg-white rounded-3xl p-3 mb-5 shadow-sm border border-gray-100 flex-col dark:bg-gray-800 dark:border-gray-700 dark:text-white "
+      className="bg-white rounded-3xl p-3 mb-5 shadow-sm border border-gray-100 flex-col dark:bg-gray-800 dark:border-gray-700"
     >
-      {/* --- Image --- */}
-      <Image
-        source={{ uri: image }}
-        className="w-full rounded-2xl mb-3 bg-gray-100 "
-        style={{ height: 150 }}
-        resizeMode="cover"
-      />
+      {/* Image + status badge */}
+      <View style={{ position: "relative" }}>
+        <Image
+          source={{ uri: image }}
+          className="w-full rounded-2xl mb-3 bg-gray-100"
+          style={{ height: 150 }}
+          resizeMode="cover"
+        />
+        {status ? <StatusPill status={status} /> : null}
+      </View>
 
-      {/* --- Text Info --- */}
-      {/* flex-1 ensures the text takes up available space, pushing the button to the bottom */}
-      <View className="flex-1 mb-3 px-1  ">
+      {/* Name & breed */}
+      <View className="flex-1 mb-3 px-1">
         <Text
           className="text-darkBlue font-extrabold text-lg dark:text-white"
-          numberOfLines={1} // Prevents long names from breaking the layout
+          numberOfLines={1}
         >
           {name}
         </Text>
         <Text
           className="text-warnBrown font-semibold text-xs mt-0.5"
-          numberOfLines={1} // Truncates long breeds like "Golden Retriever" smoothly
+          numberOfLines={1}
         >
           {breed}
         </Text>
       </View>
 
-      {/* --- Action Button --- */}
+      {/* CTA — greyed out when not available */}
       <Link href={`/pets/${id}`} asChild>
-        <TouchableOpacity className="bg-primary py-3 rounded-xl items-center w-full shadow-sm">
-          <Text className="text-white font-bold text-sm">Meet {name}</Text>
+        <TouchableOpacity
+          className="py-3 rounded-xl items-center w-full shadow-sm"
+          style={{
+            backgroundColor: status === "Adopted" ? "#D1D5DB" : "#1E6B45",
+          }}
+          disabled={status === "Adopted"}
+        >
+          <Text className="text-white font-bold text-sm">
+            {status === "Adopted" ? "Already Adopted" : `Meet ${name}`}
+          </Text>
         </TouchableOpacity>
       </Link>
     </View>

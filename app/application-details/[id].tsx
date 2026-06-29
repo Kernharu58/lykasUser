@@ -1,50 +1,294 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../utils/api";
 
-// ── Adoption timeline (7 steps) ──────────────────────────────────────────────
+// ─── Timeline data ────────────────────────────────────────────────────────────
 const ADOPTION_STEPS = [
-  "Application Submitted",
-  "Under Review",
-  "Interview Scheduled",
-  "Interview Completed",
-  "Home Visit Scheduled",
-  "Home Visit Completed",
+  "Application submitted",
+  "Under review",
+  "Interview scheduled",
+  "Interview completed",
+  "Home visit scheduled",
+  "Home visit completed",
   "Approved",
 ];
 
-// ── Foster timeline (4 steps — no interview/home-visit) ───────────────────────
 const FOSTER_STEPS = [
-  "Application Submitted",
-  "Under Review",
+  "Application submitted",
+  "Under review",
   "Approved",
-  "Foster Period Active",
+  "Foster period active",
 ];
 
-function getAdoptionCompletedSteps(app: any, interview: any, homeVisit: any) {
-  const done: boolean[] = [true]; // always submitted
-  done.push(app.status !== "pending" || !!interview);
-  done.push(interview?.status === "scheduled" || interview?.status === "completed" || interview?.result === "passed");
-  done.push(interview?.result === "passed");
-  done.push(homeVisit?.status === "scheduled" || homeVisit?.status === "completed" || homeVisit?.result === "passed");
-  done.push(homeVisit?.result === "passed");
-  done.push(app.status === "approved");
-  return done;
-}
-
-function getFosterCompletedSteps(app: any) {
-  const approved = app.status === "approved";
+function getAdoptionCompletedSteps(
+  app: any,
+  interview: any,
+  homeVisit: any,
+): boolean[] {
   return [
-    true,                            // Submitted
-    app.status !== "pending",        // Under Review
-    approved,                        // Approved
-    approved,                        // Foster Period Active (set by approval)
+    true,
+    app.status !== "pending" || !!interview,
+    interview?.status === "scheduled" ||
+      interview?.status === "completed" ||
+      interview?.result === "passed",
+    interview?.result === "passed",
+    homeVisit?.status === "scheduled" ||
+      homeVisit?.status === "completed" ||
+      homeVisit?.result === "passed",
+    homeVisit?.result === "passed",
+    app.status === "approved",
   ];
 }
 
+function getFosterCompletedSteps(app: any): boolean[] {
+  const approved = app.status === "approved";
+  return [true, app.status !== "pending", approved, approved];
+}
+
+// ─── Agreement sign-off section ───────────────────────────────────────────────
+function AgreementSection({
+  app,
+  accentColor,
+  onAgreementSigned,
+}: {
+  app: any;
+  accentColor: string;
+  onAgreementSigned: () => void;
+}) {
+  const [signing, setSigning] = useState(false);
+  const alreadySigned = !!app.agreementSignedAt;
+
+  if (alreadySigned) {
+    return (
+      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800">
+        <View className="flex-row items-center gap-2 mb-1">
+          <Ionicons name="checkmark-circle" size={20} color="#1E6B45" />
+          <Text className="font-extrabold text-[#111827] dark:text-white">
+            Adoption Agreement
+          </Text>
+        </View>
+        <Text className="text-sm text-[#6B7280] dark:text-gray-400">
+          Signed on{" "}
+          {new Date(app.agreementSignedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </Text>
+        {app.agreementDocumentUrl && (
+          <TouchableOpacity
+            className="mt-3 flex-row items-center gap-1"
+            onPress={() => Linking.openURL(app.agreementDocumentUrl)}
+          >
+            <Ionicons name="document-text-outline" size={16} color={accentColor} />
+            <Text className="text-sm font-bold" style={{ color: accentColor }}>
+              View signed document
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  }
+
+  const handleSign = () => {
+    Alert.alert(
+      "Sign Adoption Agreement",
+      "By confirming, you acknowledge that you have read and agree to the shelter's adoption terms, including home visit requirements and post-adoption check-ins.",
+      [
+        { text: "Review Later", style: "cancel" },
+        {
+          text: "I Agree & Sign",
+          onPress: async () => {
+            setSigning(true);
+            try {
+              await api.post(`/applications/${app._id}/sign-agreement`);
+              Alert.alert(
+                "Agreement signed",
+                "Thank you! Your signed agreement has been recorded. Staff will contact you about next steps.",
+              );
+              onAgreementSigned();
+            } catch (err: any) {
+              Alert.alert(
+                "Error",
+                err.response?.data?.message ||
+                  "Could not record your signature. Please try again.",
+              );
+            } finally {
+              setSigning(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  return (
+    <View
+      className="mt-5 rounded-3xl border p-5"
+      style={{ borderColor: accentColor + "40", backgroundColor: accentColor + "10" }}
+    >
+      <View className="flex-row items-center gap-2 mb-2">
+        <Ionicons name="document-text-outline" size={20} color={accentColor} />
+        <Text className="font-extrabold text-[#111827] dark:text-white">
+          Adoption Agreement
+        </Text>
+        <View className="rounded-full px-2 py-0.5 bg-[#FEF3E2]">
+          <Text className="text-xs font-bold text-[#92400E]">Action needed</Text>
+        </View>
+      </View>
+      <Text className="text-sm text-[#6B7280] dark:text-gray-400 leading-5 mb-4">
+        Please read and sign the adoption agreement before your application can
+        proceed to the interview stage.
+      </Text>
+      <TouchableOpacity
+        className="rounded-xl py-3 items-center"
+        style={{ backgroundColor: accentColor }}
+        onPress={handleSign}
+        disabled={signing}
+      >
+        {signing ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text className="font-extrabold text-white">Sign Agreement</Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ─── Interview scheduling section ─────────────────────────────────────────────
+function InterviewSection({
+  app,
+  interview,
+  accentColor,
+}: {
+  app: any;
+  interview: any;
+  accentColor: string;
+}) {
+  const router = useRouter();
+
+  // Already scheduled — show details
+  if (interview) {
+    const resultColor =
+      interview.result === "passed"
+        ? "#1E6B45"
+        : interview.result === "failed"
+        ? "#EF4444"
+        : "#E8A020";
+
+    return (
+      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800">
+        <Text className="font-extrabold text-[#111827] dark:text-white mb-1">
+          Interview
+        </Text>
+        <Text className="text-sm text-[#6B7280] dark:text-gray-400">
+          {new Date(interview.scheduledDate).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          {interview.method ? ` · ${interview.method}` : ""}
+          {interview.location ? ` · ${interview.location}` : " · TBD"}
+        </Text>
+        <Text className="mt-2 text-sm font-bold capitalize" style={{ color: resultColor }}>
+          {interview.status}
+        </Text>
+      </View>
+    );
+  }
+
+  // Agreement must be signed first
+  if (!app.agreementSignedAt) {
+    return (
+      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
+        <View className="flex-row items-center gap-2">
+          <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+          <Text className="font-extrabold text-[#9CA3AF]">Interview Scheduling</Text>
+        </View>
+        <Text className="mt-1 text-sm text-[#B0A898]">
+          Sign the adoption agreement above to unlock interview scheduling.
+        </Text>
+      </View>
+    );
+  }
+
+  // Ready to schedule
+  return (
+    <View
+      className="mt-5 rounded-3xl border p-5"
+      style={{ borderColor: accentColor + "40", backgroundColor: accentColor + "10" }}
+    >
+      <View className="flex-row items-center gap-2 mb-2">
+        <Ionicons name="calendar-outline" size={20} color={accentColor} />
+        <Text className="font-extrabold text-[#111827] dark:text-white">
+          Schedule Interview
+        </Text>
+        <View className="rounded-full px-2 py-0.5 bg-[#FEF3E2]">
+          <Text className="text-xs font-bold text-[#92400E]">Action needed</Text>
+        </View>
+      </View>
+      <Text className="text-sm text-[#6B7280] dark:text-gray-400 leading-5 mb-4">
+        Staff are ready to meet you. Pick a time slot for your adoption interview.
+      </Text>
+      <TouchableOpacity
+        className="rounded-xl py-3 items-center"
+        style={{ backgroundColor: accentColor }}
+        onPress={() =>
+          router.push(`/appointments/apply/${app._id}` as any)
+        }
+      >
+        <Text className="font-extrabold text-white">Choose a Time Slot</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ─── Home visit section ───────────────────────────────────────────────────────
+function HomeVisitSection({ homeVisit }: { homeVisit: any }) {
+  if (!homeVisit) return null;
+
+  const resultColor =
+    homeVisit.result === "passed"
+      ? "#1E6B45"
+      : homeVisit.result === "failed"
+      ? "#EF4444"
+      : "#E8A020";
+
+  return (
+    <View className="mt-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
+      <Text className="font-extrabold text-[#111827] dark:text-white mb-1">
+        Home Visit
+      </Text>
+      <Text className="text-sm text-[#6B7280] dark:text-gray-400">
+        {new Date(homeVisit.scheduledDate).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+        {homeVisit.address ? ` · ${homeVisit.address}` : ""}
+      </Text>
+      <Text className="mt-1 text-sm font-bold capitalize" style={{ color: resultColor }}>
+        {homeVisit.status}
+      </Text>
+    </View>
+  );
+}
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 export default function ApplicationDetails() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,43 +297,48 @@ export default function ApplicationDetails() {
   const [homeVisit, setHomeVisit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [appRes, interviewRes, homeVisitRes] = await Promise.allSettled([
-          api.get(`/applications/${id}`),
-          api.get("/interviews/my"),
-          api.get("/home-visits/my"),
-        ]);
-        if (appRes.status === "fulfilled") setApp(appRes.value.data);
-        if (interviewRes.status === "fulfilled") {
-          const found = interviewRes.value.data.find((i: any) => i.application === id || i.application?._id === id);
-          setInterview(found || null);
-        }
-        if (homeVisitRes.status === "fulfilled") {
-          const found = homeVisitRes.value.data.find((hv: any) => hv.application === id || hv.application?._id === id);
-          setHomeVisit(found || null);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+  const load = async () => {
+    try {
+      const [appRes, interviewRes, homeVisitRes] = await Promise.allSettled([
+        api.get(`/applications/${id}`),
+        api.get("/interviews/my"),
+        api.get("/home-visits/my"),
+      ]);
+      if (appRes.status === "fulfilled") setApp(appRes.value.data);
+      if (interviewRes.status === "fulfilled") {
+        const found = interviewRes.value.data.find(
+          (i: any) => i.application === id || i.application?._id === id,
+        );
+        setInterview(found || null);
       }
-    };
-    load();
-  }, [id]);
+      if (homeVisitRes.status === "fulfilled") {
+        const found = homeVisitRes.value.data.find(
+          (hv: any) => hv.application === id || hv.application?._id === id,
+        );
+        setHomeVisit(found || null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
-    </SafeAreaView>
-  );
+  useEffect(() => { load(); }, [id]);
 
-  if (!app) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <Text className="text-[#6B7280]">Application not found.</Text>
-    </SafeAreaView>
-  );
+  if (loading)
+    return (
+      <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
+        <ActivityIndicator size="large" color="#1E6B45" />
+      </SafeAreaView>
+    );
+
+  if (!app)
+    return (
+      <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
+        <Text className="text-[#6B7280]">Application not found.</Text>
+      </SafeAreaView>
+    );
 
   const isFoster = app.type === "foster";
   const accentColor = isFoster ? "#D4622A" : "#1E6B45";
@@ -99,8 +348,13 @@ export default function ApplicationDetails() {
     : getAdoptionCompletedSteps(app, interview, homeVisit);
   const completedCount = completedSteps.filter(Boolean).length;
 
+  // Show agreement + interview sections only for adoption (not foster)
+  const showAssessmentActions =
+    !isFoster && app.status !== "rejected" && app.status !== "approved";
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+      {/* Header */}
       <View className="flex-row items-center px-6 mt-4 mb-5">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -109,23 +363,34 @@ export default function ApplicationDetails() {
           <Ionicons name="arrow-back" size={20} color={accentColor} />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">Application Details</Text>
-          <Text className="text-xs font-bold text-[#6B7280]">{app._id?.slice(-10).toUpperCase()}</Text>
+          <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">
+            Application Details
+          </Text>
+          <Text className="text-xs font-bold text-[#6B7280]">
+            {app._id?.slice(-10).toUpperCase()}
+          </Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}>
-        {/* Header card */}
+        {/* Hero card */}
         <View className="rounded-3xl p-5" style={{ backgroundColor: accentColor }}>
           <Text className="text-sm font-bold text-white/80">Pet</Text>
-          <Text className="mt-1 text-2xl font-extrabold text-white">{app.pet?.name}</Text>
+          <Text className="mt-1 text-2xl font-extrabold text-white">
+            {app.pet?.name}
+          </Text>
           <Text className="text-white/80 mt-1 capitalize">
             {app.status} · {isFoster ? "Foster" : app.pet?.species}
           </Text>
           <View className="mt-4 h-3 rounded-full bg-white/20">
-            <View className="h-3 rounded-full bg-white" style={{ width: `${(completedCount / steps.length) * 100}%` }} />
+            <View
+              className="h-3 rounded-full bg-white"
+              style={{ width: `${(completedCount / steps.length) * 100}%` }}
+            />
           </View>
-          <Text className="mt-2 text-xs font-bold text-white/80">{completedCount} of {steps.length} steps complete</Text>
+          <Text className="mt-2 text-xs font-bold text-white/80">
+            {completedCount} of {steps.length} steps complete
+          </Text>
         </View>
 
         {/* Timeline */}
@@ -138,7 +403,9 @@ export default function ApplicationDetails() {
               <View className="items-center">
                 <View
                   className="h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB" }}
+                  style={{
+                    backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB",
+                  }}
                 >
                   <Ionicons
                     name={completedSteps[i] ? "checkmark" : "ellipse-outline"}
@@ -147,7 +414,12 @@ export default function ApplicationDetails() {
                   />
                 </View>
                 {i !== steps.length - 1 && (
-                  <View className="h-8 w-0.5" style={{ backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB" }} />
+                  <View
+                    className="h-8 w-0.5"
+                    style={{
+                      backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB",
+                    }}
+                  />
                 )}
               </View>
               <Text
@@ -160,39 +432,36 @@ export default function ApplicationDetails() {
           ))}
         </View>
 
-        {/* Interview info — adoption only */}
-        {!isFoster && interview && (
-          <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
-            <Text className="font-extrabold text-[#111827] dark:text-white">Interview</Text>
-            <Text className="mt-1 text-sm text-[#6B7280]">
-              {new Date(interview.scheduledDate).toLocaleDateString()} · {interview.method} · {interview.location || "TBD"}
+        {/* ── Assessment actions (adoption only, while in progress) ── */}
+        {showAssessmentActions && (
+          <>
+            <Text className="mt-7 mb-1 text-xl font-extrabold text-[#111827] dark:text-white">
+              Actions needed
             </Text>
-            <Text
-              className="mt-1 text-sm font-bold capitalize"
-              style={{ color: interview.result === "passed" ? "#1E6B45" : interview.result === "failed" ? "#EF4444" : "#E8A020" }}
-            >
-              {interview.status}
+            <Text className="text-sm text-[#6B7280] dark:text-gray-400 mb-2">
+              Complete these steps to move your application forward.
             </Text>
-          </View>
+
+            {/* 1. Agreement sign-off */}
+            <AgreementSection
+              app={app}
+              accentColor={accentColor}
+              onAgreementSigned={load}
+            />
+
+            {/* 2. Interview scheduling */}
+            <InterviewSection
+              app={app}
+              interview={interview}
+              accentColor={accentColor}
+            />
+          </>
         )}
 
-        {/* Home visit info — adoption only */}
-        {!isFoster && homeVisit && (
-          <View className="mt-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
-            <Text className="font-extrabold text-[#111827] dark:text-white">Home Visit</Text>
-            <Text className="mt-1 text-sm text-[#6B7280]">
-              {new Date(homeVisit.scheduledDate).toLocaleDateString()} · {homeVisit.address}
-            </Text>
-            <Text
-              className="mt-1 text-sm font-bold capitalize"
-              style={{ color: homeVisit.result === "passed" ? "#1E6B45" : homeVisit.result === "failed" ? "#EF4444" : "#E8A020" }}
-            >
-              {homeVisit.status}
-            </Text>
-          </View>
-        )}
+        {/* Home visit info */}
+        {!isFoster && <HomeVisitSection homeVisit={homeVisit} />}
 
-        {/* Foster period pill — foster only */}
+        {/* Foster period */}
         {isFoster && app.fosterPeriod && (
           <View className="mt-5 rounded-3xl border border-[#F0DDD4] bg-[#FFF4EE] p-4">
             <Text className="font-extrabold text-[#D4622A]">Foster Period</Text>
@@ -202,8 +471,16 @@ export default function ApplicationDetails() {
 
         {/* Applied on */}
         <View className="mt-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
-          <Text className="font-extrabold text-[#111827] dark:text-white">Applied on</Text>
-          <Text className="mt-1 text-sm text-[#6B7280]">{new Date(app.createdAt).toLocaleDateString()}</Text>
+          <Text className="font-extrabold text-[#111827] dark:text-white">
+            Applied on
+          </Text>
+          <Text className="mt-1 text-sm text-[#6B7280]">
+            {new Date(app.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
