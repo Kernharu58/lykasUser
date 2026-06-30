@@ -12,7 +12,7 @@ const sections = [
   { title: "My Pets",          subtitle: "Baby book and health updates",             icon: "paw-outline",            path: "/my-pets" },
   { title: "Foster Trial",     subtitle: "Reports, reminders, and staff check-ins",  icon: "home-outline",           path: "/foster-dashboard" },
   { title: "My Documents",     subtitle: "Verification status and uploads",          icon: "document-text-outline",  path: "/documents" },
-  { title: "Payments",         subtitle: "Adoption fees and receipts",               icon: "card-outline",           path: "/payments" },
+  { title: "Payments",         subtitle: "Donation receipts and history",            icon: "card-outline",           path: "/payments" },
   { title: "Saved Pets",       subtitle: "Pets you want to revisit",                icon: "heart-outline",          path: "/(tabs)/favorites" },
   { title: "Compare Pets",     subtitle: "Review saved pets side by side",          icon: "git-compare-outline",    path: "/compare-pets" },
   { title: "Donation History", subtitle: "Receipts and past gifts",                 icon: "receipt-outline",        path: "/donate" },

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import { StatusBadge } from "../components/StatusBadge";
@@ -12,20 +12,15 @@ import { COLORS } from "../utils/colors";
 export default function Payments() {
   const router = useRouter();
   const [payments, setPayments] = useState<any[]>([]);
-  const [pendingFee, setPendingFee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPayments = async () => {
     try {
       setError(null);
       const res = await api.get("/payments/my");
-      const all: any[] = res.data.payments || [];
-      setPayments(all);
-      const fee = all.find(p => p.type === "adoption_fee" && p.status === "pending");
-      setPendingFee(fee || null);
+      setPayments(res.data.payments || []);
     } catch (e) {
       console.error(e);
       setError("Could not load payments and receipts.");
@@ -34,28 +29,6 @@ export default function Payments() {
   };
 
   useFocusEffect(useCallback(() => { fetchPayments(); }, []));
-
-  const handlePayFee = async () => {
-    if (pendingFee?.paymongoCheckoutUrl) {
-      await Linking.openURL(pendingFee.paymongoCheckoutUrl);
-      return;
-    }
-    setPaying(true);
-    try {
-      const res = await api.post("/payments/create-checkout", {
-        type: "adoption_fee",
-        amount: 3000,
-        description: "Adoption Fee — CarePaws Shelter",
-        successUrl: "carepaws://payment/success",
-        cancelUrl:  "carepaws://payment/cancel",
-      });
-      await Linking.openURL(res.data.checkoutUrl);
-      fetchPayments();
-    } catch (e: any) {
-      console.error(e);
-      Alert.alert("Payment Error", e.response?.data?.message || "Could not start checkout. Please try again.");
-    } finally { setPaying(false); }
-  };
 
   if (loading) return (
     <SafeAreaView className="flex-1 bg-bgSoft px-6">
@@ -80,31 +53,12 @@ export default function Payments() {
           <ErrorState message={error} onAction={fetchPayments} />
         ) : null}
 
-        {/* Adoption Fee Card */}
-        {!error && <View className="rounded-3xl border border-border bg-white p-5 dark:bg-gray-800 mb-5">
-          <Text className="text-xl font-extrabold text-ink dark:text-white">Adoption Fee</Text>
-          {[["Medical and vaccines", "PHP 1,500"], ["Microchip", "PHP 800"], ["Shelter care fee", "PHP 700"]].map(([label, value]) => (
-            <View key={label} className="mt-4 flex-row justify-between">
-              <Text className="font-bold text-muted">{label}</Text>
-              <Text className="font-extrabold text-ink dark:text-white">{value}</Text>
-            </View>
-          ))}
-          <View className="mt-5 border-t border-border pt-4 flex-row justify-between">
-            <Text className="text-lg font-extrabold text-ink dark:text-white">Total</Text>
-            <Text className="text-lg font-extrabold text-primary">PHP 3,000</Text>
-          </View>
-          <TouchableOpacity className="mt-4 rounded-2xl bg-primary py-4" onPress={handlePayFee} disabled={paying}>
-            {paying ? <ActivityIndicator color="#fff" />
-              : <Text className="text-center font-extrabold text-white">Pay Now with PayMongo</Text>}
-          </TouchableOpacity>
-        </View>}
-
         {/* Payment History */}
         <Text className="mb-3 text-xl font-extrabold text-ink dark:text-white">Payment History</Text>
         {!error && payments.length === 0 ? (
           <EmptyState
             title="No payments yet"
-            message="Adoption fees, donation receipts, and payment statuses will appear here."
+            message="Donation receipts and payment statuses will appear here."
             icon="receipt-outline"
           />
         ) : (

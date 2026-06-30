@@ -27,7 +27,6 @@ const GREEN = COLORS.primary;
 
 const QUICK_REPLIES = [
   { label: "Schedule a visit", text: "I'd like to schedule a visit." },
-  { label: "Adoption fees?", text: "What are the adoption fees?" },
   { label: "Application status", text: "Can you check my application status?" },
   { label: "Foster report", text: "I need help with my foster monitoring report." },
 ];
