@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppointmentCard from "../../components/AppointmentCard";
+import { formatDateWithWeekday, formatTime } from "../../utils/format";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 interface Appointment {
   _id: string;
@@ -51,22 +53,8 @@ export default function Appointments() {
 
   const formatAppointmentDate = (dateString: string, durationHours: number) => {
     const date = new Date(dateString);
-    const datePart = date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-    const startTime = date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
     const endDate = new Date(date.getTime() + durationHours * 60 * 60 * 1000);
-    const endTime = endDate.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-
-    return `${datePart} • ${startTime} - ${endTime}`;
+    return `${formatDateWithWeekday(date)} • ${formatTime(date)} - ${formatTime(endDate)}`;
   };
 
   return (
@@ -77,7 +65,7 @@ export default function Appointments() {
           onPress={() => router.back()}
           className="flex-row items-center z-10"
         >
-          <Ionicons name="arrow-back" size={20} color="#2D6A4F" />
+          <Ionicons name="arrow-back" size={20} color={COLORS.primaryDeep} />
           <Text className="text-primary font-bold ml-1">Back</Text>
         </TouchableOpacity>
         <View className="absolute left-0 right-0 items-center pointer-events-none">
@@ -111,7 +99,7 @@ export default function Appointments() {
 
         {loading ? (
           <View className="mt-10 items-center justify-center">
-            <ActivityIndicator size="large" color="#2D6A4F" />
+            <ActivityIndicator size="large" color={COLORS.primaryDeep} />
             <Text className="text-neutral mt-4">Loading shifts...</Text>
           </View>
         ) : appointments.length > 0 ? (

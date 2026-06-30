@@ -1,6 +1,8 @@
 import { Link } from "expo-router";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { getStatusColor } from "@/components/StatusBadge";
+import { COLORS } from "../utils/colors";
 
 interface PetCardProps {
   id: string;
@@ -10,28 +12,21 @@ interface PetCardProps {
   status?: string;
 }
 
-// Maps pet status → pill colours
-const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  Available: { bg: "#1E6B45", text: "#FFFFFF" },
-  Fostered:  { bg: "#E8A020", text: "#FFFFFF" },
-  Adopted:   { bg: "#6B7280", text: "#FFFFFF" },
-};
-
 function StatusPill({ status }: { status: string }) {
-  const style = STATUS_STYLE[status] ?? { bg: "#6B7280", text: "#FFFFFF" };
+  const bg = getStatusColor(status, "pet");
   return (
     <View
       style={{
         position: "absolute",
         top: 8,
         right: 8,
-        backgroundColor: style.bg,
+        backgroundColor: bg,
         borderRadius: 999,
         paddingHorizontal: 8,
         paddingVertical: 3,
       }}
     >
-      <Text style={{ color: style.text, fontSize: 10, fontWeight: "700" }}>
+      <Text style={{ color: COLORS.white, fontSize: 10, fontWeight: "700" }}>
         {status}
       </Text>
     </View>
@@ -76,7 +71,8 @@ export default function PetCard({ id, name, breed, image, status }: PetCardProps
         <TouchableOpacity
           className="py-3 rounded-xl items-center w-full shadow-sm"
           style={{
-            backgroundColor: status === "Adopted" ? "#D1D5DB" : "#1E6B45",
+            backgroundColor:
+              status === "Adopted" ? COLORS.gray300 : getStatusColor("Available", "pet"),
           }}
           disabled={status === "Adopted"}
         >

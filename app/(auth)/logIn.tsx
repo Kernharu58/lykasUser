@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from 'expo-secure-store';
 import * as Google from "expo-auth-session/providers/google";
+import { makeRedirectUri } from "expo-auth-session";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -17,9 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
 import * as WebBrowser from "expo-web-browser";
+import { COLORS } from "../../utils/colors";
 
 WebBrowser.maybeCompleteAuthSession();
-
 
 export default function LogIn() {
   const router = useRouter();
@@ -35,14 +36,15 @@ export default function LogIn() {
   const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID || "";
   const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_IOS_CLIENT_ID || "";
 
-const GOOGLE_REDIRECT_URI = "com.kernharu.carepaws:/oauth2redirect/google";
-
-const [request, response, promptAsync] = Google.useAuthRequest({
-  webClientId: WEB_CLIENT_ID,
-  androidClientId: ANDROID_CLIENT_ID,
-  iosClientId: IOS_CLIENT_ID,
-  redirectUri: GOOGLE_REDIRECT_URI,
-});
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: WEB_CLIENT_ID,
+    androidClientId: ANDROID_CLIENT_ID,
+    iosClientId: IOS_CLIENT_ID,
+    redirectUri: makeRedirectUri({
+      scheme: "carepaws",
+      path: "oauth2redirect/google",
+    }),
+  });
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -110,7 +112,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
   if (isLoading || userToken) {
     return (
       <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
-        <ActivityIndicator size="large" color="#2D6A4F" />
+        <ActivityIndicator size="large" color={COLORS.primaryDeep} />
       </SafeAreaView>
     );
   }
@@ -139,7 +141,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
           <TextInput
             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 mb-4 text-darkBlue font-medium"
             placeholder="Email Address"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={COLORS.neutral}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -151,7 +153,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
             <TextInput
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 pr-12 text-darkBlue font-medium"
               placeholder="Password"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={COLORS.neutral}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -163,7 +165,7 @@ const [request, response, promptAsync] = Google.useAuthRequest({
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
                 size={22}
-                color="#AAAAAA"
+                color={COLORS.neutral}
               />
             </TouchableOpacity>
           </View>

@@ -9,8 +9,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
-const GREEN = "#1E6B45";
+const GREEN = COLORS.primary;
 
 export default function Settings() {
   const router = useRouter();
@@ -113,9 +114,9 @@ export default function Settings() {
   const initial = displayName?.charAt(0)?.toUpperCase() || "C";
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <View className="flex-row items-center px-6 mt-4 mb-6">
-        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700">
+        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-border dark:bg-gray-800 dark:border-gray-700">
           <Ionicons name="arrow-back" size={20} color={GREEN} />
         </TouchableOpacity>
         <Text className="ml-4 text-2xl font-extrabold text-gray-900 dark:text-white">Settings</Text>
@@ -135,49 +136,49 @@ export default function Settings() {
 
         <View className="items-center mb-8">
           <View className="relative">
-            <TouchableOpacity className="h-28 w-28 rounded-full bg-[#1E6B45] items-center justify-center overflow-hidden border-4 border-white shadow-sm" onPress={pickImage} disabled={uploadingImage}>
+            <TouchableOpacity className="h-28 w-28 rounded-full bg-primary items-center justify-center overflow-hidden border-4 border-white shadow-sm" onPress={pickImage} disabled={uploadingImage}>
               {uploadingImage ? <ActivityIndicator color="white" /> : profilePicture ? <Image source={{ uri: profilePicture }} className="h-full w-full" resizeMode="cover" /> : <Text className="text-4xl font-extrabold text-white">{initial}</Text>}
             </TouchableOpacity>
-            <TouchableOpacity className="absolute bottom-1 right-0 h-10 w-10 rounded-full bg-white border border-[#DCE8E1] items-center justify-center shadow-sm" onPress={pickImage}>
+            <TouchableOpacity className="absolute bottom-1 right-0 h-10 w-10 rounded-full bg-white border border-border items-center justify-center shadow-sm" onPress={pickImage}>
               <Ionicons name="camera" size={18} color={GREEN} />
             </TouchableOpacity>
           </View>
           <View className="mt-4 flex-row items-center">
             <Text className="text-3xl font-extrabold text-gray-900 dark:text-white">{displayName || "CarePaws User"}</Text>
-            <TouchableOpacity className="ml-3 h-9 w-9 rounded-full bg-[#EAF4EE] items-center justify-center" onPress={() => { setEditName(displayName); setEditModalVisible(true); }}>
+            <TouchableOpacity className="ml-3 h-9 w-9 rounded-full bg-mintBg items-center justify-center" onPress={() => { setEditName(displayName); setEditModalVisible(true); }}>
               <Ionicons name="pencil" size={16} color={GREEN} />
             </TouchableOpacity>
           </View>
           <Text className="mt-1 text-sm font-medium text-gray-500">Pet Parent in Pampanga</Text>
         </View>
 
-        <View className="rounded-3xl bg-white p-2 shadow-sm border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700 mb-6">
+        <View className="rounded-3xl bg-white p-2 shadow-sm border border-border dark:bg-gray-800 dark:border-gray-700 mb-6">
           {[
             { label: "My Applications", icon: "clipboard-outline", path: "/(tabs)/my-applications" },
             { label: "Saved Pets", icon: "heart-outline", path: "/(tabs)/favorites" },
             { label: "My Pets", icon: "paw-outline", path: "/my-pets" },
             { label: "Messages", icon: "chatbubbles-outline", path: "/(tabs)/chat" },
           ].map((item, index) => (
-            <TouchableOpacity key={item.label} className={`flex-row items-center justify-between p-4 ${index !== 3 ? "border-b border-[#F3F4F6]" : ""}`} onPress={() => router.push(item.path as any)}>
-              <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-[#EAF4EE] items-center justify-center"><Ionicons name={item.icon as any} size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">{item.label}</Text></View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            <TouchableOpacity key={item.label} className={`flex-row items-center justify-between p-4 ${index !== 3 ? "border-b border-gray100" : ""}`} onPress={() => router.push(item.path as any)}>
+              <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-mintBg items-center justify-center"><Ionicons name={item.icon as any} size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">{item.label}</Text></View>
+              <Ionicons name="chevron-forward" size={20} color={COLORS.mutedLight} />
             </TouchableOpacity>
           ))}
         </View>
 
         <Text className="mb-3 ml-1 text-xs font-extrabold uppercase tracking-widest text-gray-400">Preferences</Text>
-        <View className="rounded-3xl bg-white p-5 shadow-sm border border-[#DCE8E1] dark:bg-gray-800 dark:border-gray-700 mb-6">
-          <View className="flex-row justify-between items-center mb-5 pb-5 border-b border-[#F3F4F6]">
-            <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-[#EAF4EE] items-center justify-center"><Ionicons name="notifications-outline" size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">Push Notifications</Text></View>
-            <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} trackColor={{ false: "#E5E7EB", true: "#9DD6B7" }} thumbColor={notificationsEnabled ? GREEN : "#F9FAFB"} />
+        <View className="rounded-3xl bg-white p-5 shadow-sm border border-border dark:bg-gray-800 dark:border-gray-700 mb-6">
+          <View className="flex-row justify-between items-center mb-5 pb-5 border-b border-gray100">
+            <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-mintBg items-center justify-center"><Ionicons name="notifications-outline" size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">Push Notifications</Text></View>
+            <Switch value={notificationsEnabled} onValueChange={handleToggleNotifications} trackColor={{ false: COLORS.gray200, true: COLORS.mintLight }} thumbColor={notificationsEnabled ? GREEN : COLORS.gray50} />
           </View>
           <View className="flex-row justify-between items-center">
-            <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-[#EAF4EE] items-center justify-center"><Ionicons name={isDarkMode ? "moon" : "moon-outline"} size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">Dark Mode</Text></View>
-            <Switch value={isDarkMode} onValueChange={toggleDarkMode} trackColor={{ false: "#E5E7EB", true: "#9DD6B7" }} thumbColor={isDarkMode ? GREEN : "#F9FAFB"} />
+            <View className="flex-row items-center"><View className="mr-4 h-11 w-11 rounded-full bg-mintBg items-center justify-center"><Ionicons name={isDarkMode ? "moon" : "moon-outline"} size={21} color={GREEN} /></View><Text className="text-base font-extrabold text-gray-900 dark:text-white">Dark Mode</Text></View>
+            <Switch value={isDarkMode} onValueChange={toggleDarkMode} trackColor={{ false: COLORS.gray200, true: COLORS.mintLight }} thumbColor={isDarkMode ? GREEN : COLORS.gray50} />
           </View>
         </View>
 
-        <View className="rounded-3xl bg-[#1E6B45] p-6 mb-6">
+        <View className="rounded-3xl bg-primary p-6 mb-6">
           <Text className="text-xl font-extrabold text-white">Get in Touch</Text>
           <Text className="mt-1 mb-5 text-sm text-white/80">We&apos;re here to help you and your pets.</Text>
           <Text className="text-white font-semibold mb-2">{contactInfo.address}</Text>
@@ -186,7 +187,7 @@ export default function Settings() {
         </View>
 
         <TouchableOpacity className="mb-6 rounded-2xl border border-red-100 bg-red-50 py-4 flex-row items-center justify-center" onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={22} color="#EF4444" />
+          <Ionicons name="log-out-outline" size={22} color={COLORS.danger} />
           <Text className="ml-2 text-base font-extrabold text-red-500">Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -196,10 +197,10 @@ export default function Settings() {
           <View className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-sm shadow-xl">
             <Text className="text-xl font-extrabold text-gray-900 dark:text-white mb-4">Edit Profile</Text>
             <Text className="text-sm font-bold text-gray-500 mb-2 ml-1">Display Name</Text>
-            <TextInput className="bg-[#F8FAF9] border border-[#DCE8E1] rounded-2xl px-4 py-3 text-gray-900 mb-6" value={editName} onChangeText={setEditName} placeholder="Enter your name" placeholderTextColor="#9CA3AF" />
+            <TextInput className="bg-bgSoft border border-border rounded-2xl px-4 py-3 text-gray-900 mb-6" value={editName} onChangeText={setEditName} placeholder="Enter your name" placeholderTextColor={COLORS.mutedLight} />
             <View className="flex-row justify-end gap-3">
               <TouchableOpacity className="px-5 py-3 rounded-xl bg-gray-100" onPress={() => setEditModalVisible(false)} disabled={isSaving}><Text className="font-bold text-gray-600">Cancel</Text></TouchableOpacity>
-              <TouchableOpacity className="px-6 py-3 rounded-xl bg-[#1E6B45] items-center justify-center" onPress={handleSaveProfile} disabled={isSaving}>{isSaving ? <ActivityIndicator color="white" size="small" /> : <Text className="font-bold text-white">Save</Text>}</TouchableOpacity>
+              <TouchableOpacity className="px-6 py-3 rounded-xl bg-primary items-center justify-center" onPress={handleSaveProfile} disabled={isSaving}>{isSaving ? <ActivityIndicator color="white" size="small" /> : <Text className="font-bold text-white">Save</Text>}</TouchableOpacity>
             </View>
           </View>
         </View>

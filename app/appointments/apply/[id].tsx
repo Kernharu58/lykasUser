@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../../utils/api";
+import { COLORS } from "../../../utils/colors";
 
 export default function VolunteerApplication() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function VolunteerApplication() {
             onPress={() => router.back()}
             className="flex-row items-center z-10"
           >
-            <Ionicons name="arrow-back" size={20} color="#2D6A4F" />
+            <Ionicons name="arrow-back" size={20} color={COLORS.primaryDeep} />
             <Text className="text-primary font-bold ml-1">Cancel</Text>
           </TouchableOpacity>
           <View className="absolute left-0 right-0 items-center pointer-events-none">
@@ -107,7 +108,7 @@ export default function VolunteerApplication() {
               <TextInput
                 className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-darkBlue dark:text-white font-medium"
                 placeholder="e.g., +63 912 345 6789"
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={COLORS.neutral}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
@@ -121,7 +122,7 @@ export default function VolunteerApplication() {
               <TextInput
                 className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-darkBlue dark:text-white font-medium"
                 placeholder="e.g., Jane Doe - 09987654321"
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={COLORS.neutral}
                 value={emergencyContact}
                 onChangeText={setEmergencyContact}
               />
@@ -134,7 +135,7 @@ export default function VolunteerApplication() {
               <TextInput
                 className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-darkBlue dark:text-white font-medium"
                 placeholder="Optional notes..."
-                placeholderTextColor="#AAAAAA"
+                placeholderTextColor={COLORS.neutral}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"

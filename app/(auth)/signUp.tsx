@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import { registerWithRetry } from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 export default function SignUp() {
   const router = useRouter();
@@ -152,7 +153,7 @@ export default function SignUp() {
           <TextInput
             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 mb-4 text-darkBlue font-medium"
             placeholder="Display Name (e.g., Whesley)"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={COLORS.neutral}
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
@@ -160,7 +161,7 @@ export default function SignUp() {
           <TextInput
             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 mb-4 text-darkBlue font-medium"
             placeholder="Email Address"
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={COLORS.neutral}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -173,7 +174,7 @@ export default function SignUp() {
             <TextInput
               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 pr-12 text-darkBlue font-medium"
               placeholder="Create Password"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={COLORS.neutral}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -187,7 +188,7 @@ export default function SignUp() {
               <Ionicons
                 name={showPassword ? "eye-off-outline" : "eye-outline"}
                 size={22}
-                color="#AAAAAA"
+                color={COLORS.neutral}
               />
             </TouchableOpacity>
           </View>

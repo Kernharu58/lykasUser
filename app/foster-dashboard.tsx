@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../utils/api";
+import { COLORS } from "../utils/colors";
 
 function daysLeft(endDate: string) {
   const diff = new Date(endDate).getTime() - Date.now();
@@ -85,8 +86,8 @@ export default function FosterDashboard() {
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-bgSoft items-center justify-center">
+      <ActivityIndicator size="large" color={COLORS.primary} />
     </SafeAreaView>
   );
 
@@ -97,59 +98,59 @@ export default function FosterDashboard() {
   const nextMissingWeek = missing[0] || (weeksSubmitted + 1);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       {/* Header */}
       <View className="flex-row items-center px-6 mt-4 mb-5">
-        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800">
-          <Ionicons name="arrow-back" size={20} color="#1E6B45" />
+        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-border dark:bg-gray-800">
+          <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text className="ml-4 text-2xl font-extrabold text-[#111827] dark:text-white">My Foster Trial</Text>
+        <Text className="ml-4 text-2xl font-extrabold text-ink dark:text-white">My Foster Trial</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 110 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} colors={["#1E6B45"]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} colors={[COLORS.primary]} />}
       >
         {!activeFoster ? (
           <View className="items-center mt-16">
-            <Ionicons name="home-outline" size={64} color="#DCE8E1" />
-            <Text className="mt-4 text-lg font-extrabold text-[#111827] dark:text-white">No active foster placement</Text>
-            <Text className="mt-2 text-sm text-[#6B7280] text-center">Your foster placements will appear here once assigned by staff.</Text>
+            <Ionicons name="home-outline" size={64} color={COLORS.border} />
+            <Text className="mt-4 text-lg font-extrabold text-ink dark:text-white">No active foster placement</Text>
+            <Text className="mt-2 text-sm text-muted text-center">Your foster placements will appear here once assigned by staff.</Text>
           </View>
         ) : (
           <>
             {/* Trial Summary Card */}
-            <View className="rounded-3xl bg-[#1E6B45] p-5 mb-4">
+            <View className="rounded-3xl bg-primary p-5 mb-4">
               <Text className="text-white font-bold text-lg">{activeFoster.pet?.name || "Your Pet"}</Text>
-              <Text className="text-[#A7D3BB] text-sm mt-1">
+              <Text className="text-mint text-sm mt-1">
                 Trial period · {activeFoster.trialDurationDays || "?"} days
               </Text>
 
               {/* Progress bar */}
-              <View className="mt-4 bg-[#155436] rounded-full h-3">
+              <View className="mt-4 bg-green700 rounded-full h-3">
                 <View
-                  className="bg-[#4ADE80] rounded-full h-3"
+                  className="bg-green400 rounded-full h-3"
                   style={{ width: `${progress}%` }}
                 />
               </View>
               <View className="flex-row justify-between mt-1">
-                <Text className="text-[#A7D3BB] text-xs">Day 1</Text>
+                <Text className="text-mint text-xs">Day 1</Text>
                 <Text className="text-white text-xs font-bold">{progress}% complete</Text>
-                <Text className="text-[#A7D3BB] text-xs">Day {activeFoster.trialDurationDays || "?"}</Text>
+                <Text className="text-mint text-xs">Day {activeFoster.trialDurationDays || "?"}</Text>
               </View>
 
               {activeFoster.expectedEndDate && (
-                <Text className="text-[#A7D3BB] text-sm mt-3">
+                <Text className="text-mint text-sm mt-3">
                   {daysLeft(activeFoster.expectedEndDate)} days remaining
                 </Text>
               )}
             </View>
 
             {/* Weekly Reports Card */}
-            <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border border-[#DCE8E1]">
+            <View className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-4 border border-border">
               <View className="flex-row items-center justify-between mb-3">
-                <Text className="font-bold text-[#111827] dark:text-white text-base">Weekly Reports</Text>
-                <Text className="text-sm text-[#6B7280]">{weeksSubmitted}/{weeksRequired} submitted</Text>
+                <Text className="font-bold text-ink dark:text-white text-base">Weekly Reports</Text>
+                <Text className="text-sm text-muted">{weeksSubmitted}/{weeksRequired} submitted</Text>
               </View>
 
               {/* Report dots */}
@@ -159,9 +160,9 @@ export default function FosterDashboard() {
                   return (
                     <View
                       key={w}
-                      className={`w-9 h-9 rounded-full items-center justify-center ${submitted ? "bg-[#1E6B45]" : missing.includes(w) ? "bg-red-100" : "bg-[#F3F4F6]"}`}
+                      className={`w-9 h-9 rounded-full items-center justify-center ${submitted ? "bg-primary" : missing.includes(w) ? "bg-red-100" : "bg-gray100"}`}
                     >
-                      <Text className={`text-xs font-bold ${submitted ? "text-white" : missing.includes(w) ? "text-red-500" : "text-[#6B7280]"}`}>W{w}</Text>
+                      <Text className={`text-xs font-bold ${submitted ? "text-white" : missing.includes(w) ? "text-red-500" : "text-muted"}`}>W{w}</Text>
                     </View>
                   );
                 })}
@@ -169,7 +170,7 @@ export default function FosterDashboard() {
 
               {missing.length > 0 && (
                 <View className="bg-amber-50 rounded-xl p-3 mb-3 border border-amber-200 flex-row items-center">
-                  <Ionicons name="alert-circle-outline" size={18} color="#D97706" />
+                  <Ionicons name="alert-circle-outline" size={18} color={COLORS.amber600} />
                   <Text className="ml-2 text-amber-700 text-sm flex-1">
                     Week {missing[0]} report is due. Please submit it.
                   </Text>
@@ -178,7 +179,7 @@ export default function FosterDashboard() {
 
               <TouchableOpacity
                 onPress={() => { setReportWeek(nextMissingWeek); setShowReportModal(true); }}
-                className="bg-[#1E6B45] rounded-xl py-3 items-center"
+                className="bg-primary rounded-xl py-3 items-center"
               >
                 <Text className="text-white font-bold">Submit Week {nextMissingWeek} Report</Text>
               </TouchableOpacity>
@@ -191,7 +192,7 @@ export default function FosterDashboard() {
                   <Ionicons
                     name={canFinalize.allowed ? "checkmark-circle" : "close-circle"}
                     size={22}
-                    color={canFinalize.allowed ? "#16A34A" : "#DC2626"}
+                    color={canFinalize.allowed ? COLORS.green600 : COLORS.red600}
                   />
                   <Text className={`ml-2 font-bold text-base ${canFinalize.allowed ? "text-green-700" : "text-red-700"}`}>
                     {canFinalize.allowed ? "Eligible for adoption" : "Not yet eligible"}
@@ -211,11 +212,11 @@ export default function FosterDashboard() {
             {/* Past Placements */}
             {fosters.filter(f => f.status !== "active").length > 0 && (
               <View className="mb-4">
-                <Text className="font-bold text-[#111827] dark:text-white mb-3">Past Placements</Text>
+                <Text className="font-bold text-ink dark:text-white mb-3">Past Placements</Text>
                 {fosters.filter(f => f.status !== "active").map(f => (
-                  <View key={f._id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-2 border border-[#DCE8E1]">
-                    <Text className="font-semibold text-[#111827] dark:text-white">{f.pet?.name || "Pet"}</Text>
-                    <Text className="text-[#6B7280] text-sm capitalize">{f.status} · {f.outcome || "—"}</Text>
+                  <View key={f._id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-2 border border-border">
+                    <Text className="font-semibold text-ink dark:text-white">{f.pet?.name || "Pet"}</Text>
+                    <Text className="text-muted text-sm capitalize">{f.status} · {f.outcome || "—"}</Text>
                   </View>
                 ))}
               </View>
@@ -228,60 +229,60 @@ export default function FosterDashboard() {
       <Modal visible={showReportModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white dark:bg-gray-900 rounded-t-3xl p-6">
-            <Text className="text-xl font-extrabold text-[#111827] dark:text-white mb-4">Week {reportWeek} Report</Text>
+            <Text className="text-xl font-extrabold text-ink dark:text-white mb-4">Week {reportWeek} Report</Text>
 
-            <Text className="text-sm font-semibold text-[#374151] mb-1">Appetite</Text>
+            <Text className="text-sm font-semibold text-slate mb-1">Appetite</Text>
             <View className="flex-row gap-2 mb-3">
               {["Excellent","Good","Fair","Poor"].map(opt => (
                 <TouchableOpacity key={opt} onPress={() => setAppetite(opt)}
-                  className={`px-3 py-1.5 rounded-full border ${appetite === opt ? "bg-[#1E6B45] border-[#1E6B45]" : "border-[#DCE8E1]"}`}>
-                  <Text className={appetite === opt ? "text-white text-xs" : "text-[#6B7280] text-xs"}>{opt}</Text>
+                  className={`px-3 py-1.5 rounded-full border ${appetite === opt ? "bg-primary border-primary" : "border-border"}`}>
+                  <Text className={appetite === opt ? "text-white text-xs" : "text-muted text-xs"}>{opt}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text className="text-sm font-semibold text-[#374151] mb-1">Energy Level</Text>
+            <Text className="text-sm font-semibold text-slate mb-1">Energy Level</Text>
             <View className="flex-row gap-2 mb-3">
               {["Very Active","Active","Low","Lethargic"].map(opt => (
                 <TouchableOpacity key={opt} onPress={() => setEnergy(opt)}
-                  className={`px-3 py-1.5 rounded-full border ${energy === opt ? "bg-[#1E6B45] border-[#1E6B45]" : "border-[#DCE8E1]"}`}>
-                  <Text className={energy === opt ? "text-white text-xs" : "text-[#6B7280] text-xs"}>{opt}</Text>
+                  className={`px-3 py-1.5 rounded-full border ${energy === opt ? "bg-primary border-primary" : "border-border"}`}>
+                  <Text className={energy === opt ? "text-white text-xs" : "text-muted text-xs"}>{opt}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text className="text-sm font-semibold text-[#374151] mb-1">Behavior Notes *</Text>
+            <Text className="text-sm font-semibold text-slate mb-1">Behavior Notes *</Text>
             <TextInput
               value={behavior} onChangeText={setBehavior} multiline numberOfLines={3}
               placeholder="How is your pet behaving at home this week?"
-              className="border border-[#DCE8E1] rounded-xl p-3 text-sm text-[#111827] mb-3"
+              className="border border-border rounded-xl p-3 text-sm text-ink mb-3"
               style={{ minHeight: 80, textAlignVertical: "top" }}
             />
 
-            <Text className="text-sm font-semibold text-[#374151] mb-1">Health Concerns (optional)</Text>
+            <Text className="text-sm font-semibold text-slate mb-1">Health Concerns (optional)</Text>
             <TextInput
               value={healthConcerns} onChangeText={setHealthConcerns}
               placeholder="Any health issues or vet visits?"
-              className="border border-[#DCE8E1] rounded-xl p-3 text-sm text-[#111827] mb-3"
+              className="border border-border rounded-xl p-3 text-sm text-ink mb-3"
             />
 
-            <Text className="text-sm font-semibold text-[#374151] mb-1">Overall Progress</Text>
+            <Text className="text-sm font-semibold text-slate mb-1">Overall Progress</Text>
             <View className="flex-row gap-2 mb-5">
               {["Excellent","Good","Fair","Needs Attention"].map(opt => (
                 <TouchableOpacity key={opt} onPress={() => setOverallProgress(opt)}
-                  className={`px-3 py-1.5 rounded-full border ${overallProgress === opt ? "bg-[#1E6B45] border-[#1E6B45]" : "border-[#DCE8E1]"}`}>
-                  <Text className={overallProgress === opt ? "text-white text-xs" : "text-[#6B7280] text-xs"}>{opt}</Text>
+                  className={`px-3 py-1.5 rounded-full border ${overallProgress === opt ? "bg-primary border-primary" : "border-border"}`}>
+                  <Text className={overallProgress === opt ? "text-white text-xs" : "text-muted text-xs"}>{opt}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             <View className="flex-row gap-3">
               <TouchableOpacity onPress={() => setShowReportModal(false)}
-                className="flex-1 border border-[#DCE8E1] rounded-xl py-3 items-center">
-                <Text className="text-[#6B7280] font-semibold">Cancel</Text>
+                className="flex-1 border border-border rounded-xl py-3 items-center">
+                <Text className="text-muted font-semibold">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSubmitReport} disabled={submittingReport}
-                className="flex-1 bg-[#1E6B45] rounded-xl py-3 items-center">
+                className="flex-1 bg-primary rounded-xl py-3 items-center">
                 {submittingReport
                   ? <ActivityIndicator color="#fff" size="small" />
                   : <Text className="text-white font-bold">Submit</Text>

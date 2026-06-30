@@ -11,17 +11,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 // ─── Status colours ───────────────────────────────────────────────────────────
 const STATUS_COLOR: Record<string, string> = {
-  pending:  "#E8A020",
-  approved: "#1E6B45",
-  rejected: "#EF4444",
+  pending:  COLORS.warning,
+  approved: COLORS.primary,
+  rejected: COLORS.danger,
 };
 const STATUS_BG: Record<string, string> = {
-  pending:  "#FEF3E2",
-  approved: "#EAF4EE",
-  rejected: "#FEE2E2",
+  pending:  COLORS.warningBg,
+  approved: COLORS.mintBg,
+  rejected: COLORS.dangerBg,
 };
 
 // ─── Pipeline step definitions ────────────────────────────────────────────────
@@ -108,17 +109,17 @@ function PipelineBar({
 }) {
   const barColor =
     status === "rejected"
-      ? "#EF4444"
+      ? COLORS.danger
       : status === "approved"
-      ? "#1E6B45"
-      : "#1E6B45";
+      ? COLORS.primary
+      : COLORS.primary;
 
   return (
     <View className="mt-5">
       <View className="mb-2 flex-row justify-between items-center">
         <Text
           className="text-sm font-bold flex-1 mr-2 dark:text-white"
-          style={{ color: "#111827" }}
+          style={{ color: COLORS.ink }}
           numberOfLines={1}
         >
           {currentStepLabel}
@@ -127,7 +128,7 @@ function PipelineBar({
           {progress}%
         </Text>
       </View>
-      <View className="h-2.5 rounded-full bg-[#F4F2EE] dark:bg-gray-700">
+      <View className="h-2.5 rounded-full bg-cardBg dark:bg-gray-700">
         <View
           className="h-2.5 rounded-full"
           style={{ width: `${progress}%`, backgroundColor: barColor }}
@@ -188,13 +189,13 @@ export default function MyApplications() {
 
   if (loading)
     return (
-      <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+      <SafeAreaView className="flex-1 bg-bgSoft px-6">
         <LoadingState message="Loading applications..." />
       </SafeAreaView>
     );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
         refreshControl={
@@ -204,15 +205,15 @@ export default function MyApplications() {
               setRefreshing(true);
               fetchApplications();
             }}
-            colors={["#1E6B45"]}
+            colors={[COLORS.primary]}
           />
         }
       >
         <View className="mt-4 mb-6">
-          <Text className="text-3xl font-extrabold text-[#111827] dark:text-white">
+          <Text className="text-3xl font-extrabold text-ink dark:text-white">
             My Applications
           </Text>
-          <Text className="text-[#6B7280] dark:text-gray-400 mt-2">
+          <Text className="text-muted dark:text-gray-400 mt-2">
             Transparent status tracking from submission to decision.
           </Text>
         </View>
@@ -235,15 +236,15 @@ export default function MyApplications() {
               const { progress, currentStepLabel } = getPipelineProgress(app);
               const accentColor =
                 status === "rejected"
-                  ? "#EF4444"
+                  ? COLORS.danger
                   : isFoster
-                  ? "#D4622A"
-                  : "#1E6B45";
+                  ? COLORS.accentOrange
+                  : COLORS.primary;
 
               return (
                 <TouchableOpacity
                   key={app._id}
-                  className="rounded-3xl border border-[#DCE8E1] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700"
+                  className="rounded-3xl border border-border bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700"
                   onPress={() =>
                     router.push(`/application-details/${app._id}` as any)
                   }
@@ -252,24 +253,24 @@ export default function MyApplications() {
                   {/* Header row */}
                   <View className="flex-row items-start justify-between">
                     <View className="flex-1 mr-3">
-                      <Text className="text-xs font-bold uppercase tracking-widest text-[#B0A898]">
+                      <Text className="text-xs font-bold uppercase tracking-widest text-sand">
                         {app._id?.slice(-8).toUpperCase()}
                         {isFoster ? " · Foster" : " · Adoption"}
                       </Text>
-                      <Text className="mt-2 text-xl font-extrabold text-[#111827] dark:text-white">
+                      <Text className="mt-2 text-xl font-extrabold text-ink dark:text-white">
                         {app.pet?.name || "Pet"}
                       </Text>
-                      <Text className="text-sm text-[#6B7280] dark:text-gray-400">
+                      <Text className="text-sm text-muted dark:text-gray-400">
                         {app.pet?.species}
                       </Text>
                     </View>
                     <View
                       className="rounded-full px-3 py-1"
-                      style={{ backgroundColor: STATUS_BG[status] ?? "#F4F2EE" }}
+                      style={{ backgroundColor: STATUS_BG[status] ?? COLORS.cardBg }}
                     >
                       <Text
                         className="text-xs font-bold capitalize"
-                        style={{ color: STATUS_COLOR[status] ?? "#6B7280" }}
+                        style={{ color: STATUS_COLOR[status] ?? COLORS.muted }}
                       >
                         {status}
                       </Text>
@@ -284,7 +285,7 @@ export default function MyApplications() {
                   />
 
                   {/* Tap hint */}
-                  <Text className="mt-3 text-xs text-[#B0A898] text-right">
+                  <Text className="mt-3 text-xs text-sand text-right">
                     Tap to see full timeline →
                   </Text>
 
@@ -308,7 +309,7 @@ export default function MyApplications() {
         {/* Quick actions */}
         <View className="mt-6 flex-row gap-3">
           <TouchableOpacity
-            className="flex-1 rounded-2xl bg-[#1E6B45] py-4"
+            className="flex-1 rounded-2xl bg-primary py-4"
             onPress={() => router.push("/foster-dashboard" as any)}
           >
             <Text className="text-center font-extrabold text-white">
@@ -316,10 +317,10 @@ export default function MyApplications() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 rounded-2xl border border-[#1E6B45] py-4"
+            className="flex-1 rounded-2xl border border-primary py-4"
             onPress={() => router.push("/documents" as any)}
           >
-            <Text className="text-center font-extrabold text-[#1E6B45]">
+            <Text className="text-center font-extrabold text-primary">
               Documents
             </Text>
           </TouchableOpacity>

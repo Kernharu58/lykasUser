@@ -4,15 +4,17 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
+import { formatDate } from "../../utils/format";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 const categoryColors: Record<string, string> = {
-  "Adoption Drive": "#1E6B45",
-  "Fundraiser": "#E8A020",
-  "Training": "#3B82F6",
-  "Community": "#8B5CF6",
-  "Volunteer": "#EC4899",
-  "Other": "#6B7280",
+  "Adoption Drive": COLORS.primary,
+  "Fundraiser": COLORS.warning,
+  "Training": COLORS.blue,
+  "Community": COLORS.purple,
+  "Volunteer": COLORS.pink,
+  "Other": COLORS.muted,
 };
 
 export default function Events() {
@@ -64,26 +66,26 @@ export default function Events() {
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] px-6">
+    <SafeAreaView className="flex-1 bg-bgSoft px-6">
       <LoadingState message="Loading events..." />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchEvents(); }} colors={["#1E6B45"]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchEvents(); }} colors={[COLORS.primary]} />}
       >
         <View className="mt-4 mb-5">
-          <Text className="text-3xl font-extrabold text-[#111827] dark:text-white">Community Events</Text>
-          <Text className="text-[#6B7280] dark:text-gray-400 mt-2">RSVP, volunteer, and meet adoptable pets in person.</Text>
+          <Text className="text-3xl font-extrabold text-ink dark:text-white">Community Events</Text>
+          <Text className="text-muted dark:text-gray-400 mt-2">RSVP, volunteer, and meet adoptable pets in person.</Text>
         </View>
 
-        <View className="mb-5 flex-row rounded-2xl bg-[#F4F2EE] p-1 dark:bg-gray-800">
+        <View className="mb-5 flex-row rounded-2xl bg-cardBg p-1 dark:bg-gray-800">
           {(["upcoming", "completed"] as const).map((item) => (
             <TouchableOpacity key={item} className={`flex-1 rounded-xl py-3 ${mode === item ? "bg-white dark:bg-gray-700" : ""}`} onPress={() => setMode(item)}>
-              <Text className={`text-center font-bold capitalize ${mode === item ? "text-[#1E6B45]" : "text-[#6B7280]"}`}>{item}</Text>
+              <Text className={`text-center font-bold capitalize ${mode === item ? "text-primary" : "text-muted"}`}>{item}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -101,33 +103,33 @@ export default function Events() {
             {events.map((event) => {
               const isRegistered = myRegistrations.has(event._id);
               const isFull = event.maxAttendees && event.currentAttendees >= event.maxAttendees;
-              const color = categoryColors[event.category] || "#6B7280";
+              const color = categoryColors[event.category] || COLORS.muted;
               return (
-                <View key={event._id} className="rounded-3xl border border-[#DCE8E1] bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                <View key={event._id} className="rounded-3xl border border-border bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
                   <View className="mb-4 flex-row items-center justify-between">
                     <View className="rounded-full px-3 py-1" style={{ backgroundColor: color + "20" }}>
                       <Text className="text-xs font-bold" style={{ color }}>{event.category}</Text>
                     </View>
-                    <Text className="text-xs font-bold text-[#6B7280]">{new Date(event.date).toLocaleDateString()}</Text>
+                    <Text className="text-xs font-bold text-muted">{formatDate(event.date)}</Text>
                   </View>
-                  <Text className="text-xl font-extrabold text-[#111827] dark:text-white">{event.title}</Text>
-                  {event.description ? <Text className="mt-1 text-sm text-[#6B7280]" numberOfLines={2}>{event.description}</Text> : null}
+                  <Text className="text-xl font-extrabold text-ink dark:text-white">{event.title}</Text>
+                  {event.description ? <Text className="mt-1 text-sm text-muted" numberOfLines={2}>{event.description}</Text> : null}
                   <View className="mt-3 gap-1">
-                    {event.location ? <Text className="text-sm text-[#6B7280]"><Ionicons name="location-outline" size={13} /> {event.location}</Text> : null}
-                    <Text className="text-sm text-[#6B7280]">
+                    {event.location ? <Text className="text-sm text-muted"><Ionicons name="location-outline" size={13} /> {event.location}</Text> : null}
+                    <Text className="text-sm text-muted">
                       <Ionicons name="people-outline" size={13} /> {event.currentAttendees || 0} going
                       {event.maxAttendees ? ` · ${event.maxAttendees - (event.currentAttendees || 0)} spots left` : ""}
                     </Text>
                   </View>
                   {mode === "upcoming" && (
                     <TouchableOpacity
-                      className={`mt-5 rounded-xl py-3 ${isRegistered ? "border border-[#1E6B45]" : isFull ? "bg-gray-200" : "bg-[#1E6B45]"}`}
+                      className={`mt-5 rounded-xl py-3 ${isRegistered ? "border border-primary" : isFull ? "bg-gray-200" : "bg-primary"}`}
                       disabled={(!isRegistered && isFull) || registering === event._id}
                       onPress={() => handleRSVP(event._id, isRegistered)}
                     >
                       {registering === event._id
-                        ? <ActivityIndicator color={isRegistered ? "#1E6B45" : "#fff"} />
-                        : <Text className={`text-center font-bold ${isRegistered ? "text-[#1E6B45]" : isFull ? "text-gray-500" : "text-white"}`}>
+                        ? <ActivityIndicator color={isRegistered ? COLORS.primary : "#fff"} />
+                        : <Text className={`text-center font-bold ${isRegistered ? "text-primary" : isFull ? "text-gray-500" : "text-white"}`}>
                             {isRegistered ? "Cancel RSVP" : isFull ? "Event Full" : "RSVP"}
                           </Text>}
                     </TouchableOpacity>

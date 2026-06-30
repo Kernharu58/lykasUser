@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import api from '@/utils/api';
 import { useAuth } from '@/context/AuthContext';
+import { COLORS } from "../utils/colors";
 
 export default function VerifyEmailScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
@@ -50,7 +51,7 @@ export default function VerifyEmailScreen() {
       <View className="flex-1 justify-center items-center px-4">
         {status === 'loading' && (
           <View className="items-center gap-4">
-            <ActivityIndicator size="large" color="#10b981" />
+            <ActivityIndicator size="large" color={COLORS.emerald} />
             <Text className="text-slate-600 font-medium text-center">
               Verifying your email address...
             </Text>

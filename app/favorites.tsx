@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../components/PetCard";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
+import { COLORS } from "../utils/colors";
 
 interface Pet {
   _id: string;
@@ -51,7 +52,7 @@ export default function Favorites() {
           onPress={() => router.back()}
           className="flex-row items-center z-10"
         >
-          <Ionicons name="arrow-back" size={20} color="#2D6A4F" />
+          <Ionicons name="arrow-back" size={20} color={COLORS.primaryDeep} />
           <Text className="text-primary font-bold ml-1">Back</Text>
         </TouchableOpacity>
         <View className="absolute left-0 right-0 items-center pointer-events-none">

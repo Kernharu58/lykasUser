@@ -14,7 +14,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { formatDate } from "../utils/format";
 import api from "../utils/api";
+import { COLORS } from "../utils/colors";
 
 const DOC_TYPES = [
   { key: "government_id",    label: "Government ID",       icon: "card-outline" },
@@ -25,9 +27,9 @@ const DOC_TYPES = [
 ];
 
 const statusMeta: Record<string, { color: string; bg: string; icon: string }> = {
-  pending:  { color: "#E8A020", bg: "#FEF3E2", icon: "time-outline" },
-  verified: { color: "#1E6B45", bg: "#EAF4EE", icon: "checkmark-circle-outline" },
-  rejected: { color: "#EF4444", bg: "#FEE2E2", icon: "close-circle-outline" },
+  pending:  { color: COLORS.warning, bg: COLORS.warningBg, icon: "time-outline" },
+  verified: { color: COLORS.primary, bg: COLORS.mintBg, icon: "checkmark-circle-outline" },
+  rejected: { color: COLORS.danger, bg: COLORS.dangerBg, icon: "close-circle-outline" },
 };
 
 export default function Documents() {
@@ -159,23 +161,23 @@ export default function Documents() {
   };
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-      <ActivityIndicator size="large" color="#1E6B45" />
+    <SafeAreaView className="flex-1 bg-bgSoft items-center justify-center">
+      <ActivityIndicator size="large" color={COLORS.primary} />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       {/* Header */}
       <View className="flex-row items-center px-6 mt-4 mb-5">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800">
-          <Ionicons name="arrow-back" size={20} color="#1E6B45" />
+          className="h-10 w-10 items-center justify-center rounded-full bg-white border border-border dark:bg-gray-800">
+          <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">My Documents</Text>
-          <Text className="text-xs font-bold text-[#6B7280]">{documents.length} uploaded</Text>
+          <Text className="text-2xl font-extrabold text-ink dark:text-white">My Documents</Text>
+          <Text className="text-xs font-bold text-muted">{documents.length} uploaded</Text>
         </View>
       </View>
 
@@ -185,14 +187,14 @@ export default function Documents() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => { setRefreshing(true); fetchDocuments(); }}
-            colors={["#1E6B45"]}
+            colors={[COLORS.primary]}
           />
         }
       >
         {/* Info banner */}
-        <View className="mb-5 rounded-3xl bg-[#EAF4EE] p-4">
-          <Text className="font-extrabold text-[#1E6B45]">Required for adoption</Text>
-          <Text className="mt-1 text-sm text-[#6B7280]">
+        <View className="mb-5 rounded-3xl bg-mintBg p-4">
+          <Text className="font-extrabold text-primary">Required for adoption</Text>
+          <Text className="mt-1 text-sm text-muted">
             Upload a government ID, proof of address, and house photos. Staff will verify each document.
           </Text>
         </View>
@@ -207,14 +209,14 @@ export default function Documents() {
           return (
             <View
               key={key}
-              className="mb-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800 dark:border-gray-700">
+              className="mb-3 rounded-3xl border border-border bg-white p-4 dark:bg-gray-800 dark:border-gray-700">
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1 mr-3">
-                  <View className="h-11 w-11 items-center justify-center rounded-full bg-[#EAF4EE]">
-                    <Ionicons name={icon as any} size={22} color="#1E6B45" />
+                  <View className="h-11 w-11 items-center justify-center rounded-full bg-mintBg">
+                    <Ionicons name={icon as any} size={22} color={COLORS.primary} />
                   </View>
                   <View className="ml-3 flex-1">
-                    <Text className="font-extrabold text-[#111827] dark:text-white">{label}</Text>
+                    <Text className="font-extrabold text-ink dark:text-white">{label}</Text>
                     {latest ? (
                       <View className="flex-row items-center gap-1 mt-0.5">
                         <Ionicons name={meta!.icon as any} size={12} color={meta!.color} />
@@ -223,13 +225,13 @@ export default function Documents() {
                         </Text>
                       </View>
                     ) : (
-                      <Text className="text-xs text-[#B0A898] mt-0.5">Not uploaded</Text>
+                      <Text className="text-xs text-sand mt-0.5">Not uploaded</Text>
                     )}
                   </View>
                 </View>
 
                 <TouchableOpacity
-                  className="rounded-xl bg-[#1E6B45] px-4 py-2"
+                  className="rounded-xl bg-primary px-4 py-2"
                   onPress={() => handleUpload(key)}
                   disabled={isUploading}>
                   {isUploading
@@ -253,13 +255,13 @@ export default function Documents() {
               {uploaded.length > 0 && (
                 <View className="mt-3 gap-2">
                   {uploaded.map(d => (
-                    <View key={d._id} className="flex-row items-center justify-between rounded-xl bg-[#F4F2EE] px-3 py-2 dark:bg-gray-700">
-                      <Text className="text-xs text-[#6B7280] flex-1" numberOfLines={1}>
-                        {d.label} · {new Date(d.createdAt).toLocaleDateString()}
+                    <View key={d._id} className="flex-row items-center justify-between rounded-xl bg-cardBg px-3 py-2 dark:bg-gray-700">
+                      <Text className="text-xs text-muted flex-1" numberOfLines={1}>
+                        {d.label} · {formatDate(d.createdAt)}
                       </Text>
                       {d.status === "pending" && (
                         <TouchableOpacity onPress={() => handleDelete(d._id)} className="ml-2">
-                          <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                          <Ionicons name="trash-outline" size={16} color={COLORS.danger} />
                         </TouchableOpacity>
                       )}
                     </View>

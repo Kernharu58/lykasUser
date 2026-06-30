@@ -20,9 +20,10 @@ import ChatMessage from "../../components/ChatMessage";
 import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 const SOCKET_URL = api.defaults.baseURL?.replace(/\/api\/?$/, "") || "http://localhost:5000";
-const GREEN = "#1E6B45";
+const GREEN = COLORS.primary;
 
 const QUICK_REPLIES = [
   { label: "Schedule a visit", text: "I'd like to schedule a visit." },
@@ -203,12 +204,12 @@ export default function ChatScreen() {
   const inputDisabled = !userId;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900" edges={["top"]}>
-      <View className="rounded-b-[28px] bg-[#1E6B45] px-5 pb-4 pt-3 shadow-sm">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900" edges={["top"]}>
+      <View className="rounded-b-[28px] bg-primary px-5 pb-4 pt-3 shadow-sm">
         <View className="flex-row items-center">
-          <View className="relative mr-3 h-12 w-12 items-center justify-center rounded-full bg-[#EAF4EE]">
+          <View className="relative mr-3 h-12 w-12 items-center justify-center rounded-full bg-mintBg">
             <Ionicons name="paw" size={24} color={GREEN} />
-            <View className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#1E6B45] ${isConnected ? "bg-green-400" : "bg-amber-400"}`} />
+            <View className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-primary ${isConnected ? "bg-green-400" : "bg-amber-400"}`} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-extrabold text-white">CarePaws Shelter</Text>
@@ -222,10 +223,10 @@ export default function ChatScreen() {
 
       {socketError ? (
         <View className="mx-4 mt-3 flex-row items-center rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <Ionicons name="wifi-outline" size={18} color="#E8A020" />
+          <Ionicons name="wifi-outline" size={18} color={COLORS.warning} />
           <Text className="ml-2 flex-1 text-xs font-bold text-amber-700">{socketError}</Text>
           <TouchableOpacity onPress={connectSocket}>
-            <Text className="text-xs font-extrabold text-[#1E6B45]">Retry</Text>
+            <Text className="text-xs font-extrabold text-primary">Retry</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -262,31 +263,31 @@ export default function ChatScreen() {
           />
         )}
 
-        <View className="border-t border-[#DCE8E1] bg-white px-3 pt-2 dark:border-gray-800 dark:bg-gray-900" style={{ paddingBottom: isKeyboardVisible ? 10 : 94 }}>
+        <View className="border-t border-border bg-white px-3 pt-2 dark:border-gray-800 dark:bg-gray-900" style={{ paddingBottom: isKeyboardVisible ? 10 : 94 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8, gap: 8 }}>
             {QUICK_REPLIES.map((qr) => (
-              <TouchableOpacity key={qr.text} onPress={() => sendMessage(qr.text)} disabled={inputDisabled} className="rounded-full border border-[#1E6B45]/30 bg-[#EAF4EE] px-4 py-2 disabled:opacity-50">
-                <Text className="text-xs font-extrabold text-[#1E6B45]">{qr.label}</Text>
+              <TouchableOpacity key={qr.text} onPress={() => sendMessage(qr.text)} disabled={inputDisabled} className="rounded-full border border-primary/30 bg-mintBg px-4 py-2 disabled:opacity-50">
+                <Text className="text-xs font-extrabold text-primary">{qr.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
           <View className="flex-row items-end pb-16">
-            <TouchableOpacity className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-[#EAF4EE]" onPress={() => Alert.alert("Attachments", "Photo and document attachments can be connected to the chat API next.")}>
+            <TouchableOpacity className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-mintBg" onPress={() => Alert.alert("Attachments", "Photo and document attachments can be connected to the chat API next.")}>
               <Ionicons name="add" size={24} color={GREEN} />
             </TouchableOpacity>
             <TextInput
-              className="flex-1 rounded-2xl bg-[#F3F4F6] px-4 py-3 text-base font-medium text-gray-900 dark:bg-gray-800 dark:text-white"
+              className="flex-1 rounded-2xl bg-gray100 px-4 py-3 text-base font-medium text-gray-900 dark:bg-gray-800 dark:text-white"
               placeholder={inputDisabled ? "Sign in to message..." : "Message..."}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={COLORS.mutedLight}
               value={inputText}
               onChangeText={setInputText}
               editable={!inputDisabled}
               multiline
               style={{ maxHeight: 100 }}
             />
-            <TouchableOpacity className={`ml-2 h-11 w-11 items-center justify-center rounded-full ${hasText ? "bg-[#1E6B45]" : "bg-gray-200"}`} onPress={() => sendMessage()} disabled={!hasText || inputDisabled}>
-              <Ionicons name="send" size={18} color={hasText ? "white" : "#9CA3AF"} style={{ marginLeft: 2 }} />
+            <TouchableOpacity className={`ml-2 h-11 w-11 items-center justify-center rounded-full ${hasText ? "bg-primary" : "bg-gray-200"}`} onPress={() => sendMessage()} disabled={!hasText || inputDisabled}>
+              <Ionicons name="send" size={18} color={hasText ? "white" : COLORS.mutedLight} style={{ marginLeft: 2 }} />
             </TouchableOpacity>
           </View>
         </View>

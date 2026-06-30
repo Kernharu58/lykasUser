@@ -3,10 +3,11 @@ import { Tabs } from "expo-router";
 import { useColorScheme } from "nativewind";
 import React from "react";
 import { Platform } from "react-native";
+import { COLORS } from "../../utils/colors";
 
-const GREEN = "#1E6B45";
-const GREEN_DARK = "#14532D";
-const MUTED = "#9CA3AF";
+const GREEN = COLORS.primary;
+const GREEN_DARK = COLORS.green900;
+const MUTED = COLORS.mutedLight;
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
@@ -16,22 +17,22 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: isDark ? "#4ade80" : GREEN,
-        tabBarInactiveTintColor: isDark ? "#6b7280" : MUTED,
+        tabBarActiveTintColor: isDark ? COLORS.green400 : GREEN,
+        tabBarInactiveTintColor: isDark ? COLORS.muted : MUTED,
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
           left: 22,
           right: 22,
-          bottom: Platform.OS === "ios" ? 22 : 70,
+          bottom: Platform.OS === "ios" ? 22 : 12,
           height: Platform.OS === "ios" ? 78 : 70,
           paddingTop: 10,
           paddingBottom: Platform.OS === "ios" ? 22 : 15,
           borderRadius: 34,
-          backgroundColor: isDark ? "#111827" : "#FFFFFF",
+          backgroundColor: isDark ? COLORS.ink : COLORS.white,
           borderTopWidth: 0,
           borderWidth: 1,
-          borderColor: isDark ? "#1f2937" : "#E5E7EB",
+          borderColor: isDark ? COLORS.slateDark : COLORS.gray200,
           elevation: 14,
           shadowColor: GREEN_DARK,
           shadowOffset: { width: 0, height: 8 },

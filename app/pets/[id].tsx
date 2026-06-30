@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 interface Pet {
   _id: string;
@@ -42,9 +43,9 @@ function getCTAState(status: string) {
 
 // Status pill shown next to the pet name
 const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  Available: { bg: "#EAF4EE", text: "#1E6B45", label: "Available" },
-  Fostered:  { bg: "#FEF3E2", text: "#92400E", label: "Currently Fostered" },
-  Adopted:   { bg: "#F3F4F6", text: "#6B7280", label: "Already Adopted" },
+  Available: { bg: COLORS.mintBg, text: COLORS.primary, label: "Available" },
+  Fostered:  { bg: COLORS.warningBg, text: COLORS.brown, label: "Currently Fostered" },
+  Adopted:   { bg: COLORS.gray100, text: COLORS.muted, label: "Already Adopted" },
 };
 
 export default function PetProfile() {
@@ -88,25 +89,25 @@ export default function PetProfile() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#FDFAF4] dark:bg-gray-900 justify-center items-center">
-        <ActivityIndicator size="large" color="#D4622A" />
-        <Text className="text-[#7A7068] mt-4">Fetching details...</Text>
+      <View className="flex-1 bg-cream dark:bg-gray-900 justify-center items-center">
+        <ActivityIndicator size="large" color={COLORS.accentOrange} />
+        <Text className="text-taupe mt-4">Fetching details...</Text>
       </View>
     );
   }
 
   if (error || !pet) {
     return (
-      <View className="flex-1 bg-[#FDFAF4] dark:bg-gray-900 justify-center items-center px-6">
-        <Ionicons name="alert-circle" size={48} color="#C0392B" />
-        <Text className="text-xl font-bold text-[#2C2C2C] dark:text-white mt-4 mb-2">
+      <View className="flex-1 bg-cream dark:bg-gray-900 justify-center items-center px-6">
+        <Ionicons name="alert-circle" size={48} color={COLORS.redDeep} />
+        <Text className="text-xl font-bold text-inkSoft dark:text-white mt-4 mb-2">
           Unable to load pet
         </Text>
-        <Text className="text-center text-[#7A7068] dark:text-gray-300 mb-6">
+        <Text className="text-center text-taupe dark:text-gray-300 mb-6">
           {error || "Pet not found"}
         </Text>
         <TouchableOpacity
-          className="bg-[#D4622A] py-3 px-6 rounded-xl"
+          className="bg-accentOrange py-3 px-6 rounded-xl"
           onPress={() => router.back()}
         >
           <Text className="text-white font-bold">Go Back</Text>
@@ -151,7 +152,7 @@ export default function PetProfile() {
             className="w-10 h-10 bg-white/85 rounded-full items-center justify-center shadow-sm"
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={24} color="#2C2C2C" />
+            <Ionicons name="arrow-back" size={24} color={COLORS.inkSoft} />
           </TouchableOpacity>
           <TouchableOpacity
             className="w-10 h-10 bg-white/85 rounded-full items-center justify-center shadow-sm"
@@ -160,7 +161,7 @@ export default function PetProfile() {
             <Ionicons
               name={isFavorite ? "heart" : "heart-outline"}
               size={24}
-              color={isFavorite ? "#D4622A" : "#2C2C2C"}
+              color={isFavorite ? COLORS.accentOrange : COLORS.inkSoft}
             />
           </TouchableOpacity>
         </SafeAreaView>
@@ -172,7 +173,7 @@ export default function PetProfile() {
       >
         {/* Name + status pill */}
         <View className="flex-row justify-between items-end mb-2">
-          <Text className="text-3xl font-extrabold text-[#2C2C2C] dark:text-white">
+          <Text className="text-3xl font-extrabold text-inkSoft dark:text-white">
             {pet.name}
           </Text>
           <View
@@ -185,49 +186,49 @@ export default function PetProfile() {
           </View>
         </View>
 
-        <Text className="text-[#D4622A] font-bold text-lg mb-5">{pet.breed}</Text>
+        <Text className="text-accentOrange font-bold text-lg mb-5">{pet.breed}</Text>
 
         {/* Stats row */}
-        <View className="flex-row justify-between bg-[#F4F2EE] dark:bg-gray-800 rounded-2xl p-4 mb-6">
+        <View className="flex-row justify-between bg-cardBg dark:bg-gray-800 rounded-2xl p-4 mb-6">
           <View className="items-center flex-1">
-            <Text className="text-[#7A7068] text-xs mb-1">Age</Text>
-            <Text className="text-[#2C2C2C] dark:text-white font-bold">{pet.age}</Text>
+            <Text className="text-taupe text-xs mb-1">Age</Text>
+            <Text className="text-inkSoft dark:text-white font-bold">{pet.age}</Text>
           </View>
           <View className="items-center flex-1">
-            <Text className="text-[#7A7068] text-xs mb-1">Gender</Text>
-            <Text className="text-[#2C2C2C] dark:text-white font-bold">{pet.gender}</Text>
+            <Text className="text-taupe text-xs mb-1">Gender</Text>
+            <Text className="text-inkSoft dark:text-white font-bold">{pet.gender}</Text>
           </View>
           <View className="items-center flex-1">
-            <Text className="text-[#7A7068] text-xs mb-1">Weight</Text>
-            <Text className="text-[#2C2C2C] dark:text-white font-bold">{pet.weight}</Text>
+            <Text className="text-taupe text-xs mb-1">Weight</Text>
+            <Text className="text-inkSoft dark:text-white font-bold">{pet.weight}</Text>
           </View>
         </View>
 
         {/* Health */}
-        <View className="mb-6 rounded-3xl border border-[#E8E4DC] bg-[#FDFAF4] p-4 dark:bg-gray-800 dark:border-gray-700">
-          <Text className="text-lg font-extrabold text-[#2C2C2C] dark:text-white mb-2">
+        <View className="mb-6 rounded-3xl border border-tan bg-cream p-4 dark:bg-gray-800 dark:border-gray-700">
+          <Text className="text-lg font-extrabold text-inkSoft dark:text-white mb-2">
             Health & vaccinations
           </Text>
           <View className="flex-row items-center">
-            <Ionicons name="medkit" size={20} color="#3D8A5E" />
-            <Text className="text-[#3D3830] dark:text-gray-300 ml-2 font-medium">
+            <Ionicons name="medkit" size={20} color={COLORS.mintDeep} />
+            <Text className="text-espresso dark:text-gray-300 ml-2 font-medium">
               {pet.healthStatus}
             </Text>
           </View>
         </View>
 
         {/* About */}
-        <Text className="text-lg font-extrabold text-[#2C2C2C] dark:text-white mb-2">
+        <Text className="text-lg font-extrabold text-inkSoft dark:text-white mb-2">
           About {pet.name}
         </Text>
-        <Text className="text-[#7A7068] dark:text-gray-400 leading-6 text-base">
+        <Text className="text-taupe dark:text-gray-400 leading-6 text-base">
           {pet.description}
         </Text>
       </ScrollView>
 
       {/* Unavailability banner + CTA footer */}
       <View
-        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-[#E8E4DC] dark:border-gray-800"
+        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-tan dark:border-gray-800"
         style={{ paddingBottom: Platform.OS === "ios" ? 32 : 16 }}
       >
         <UnavailableBanner />
@@ -237,15 +238,15 @@ export default function PetProfile() {
           <View className="flex-row gap-3 px-6 pt-4">
             {canFoster && (
               <TouchableOpacity
-                className="bg-white dark:bg-gray-800 border-2 border-[#D4622A] rounded-xl justify-center items-center flex-1 py-4"
+                className="bg-white dark:bg-gray-800 border-2 border-accentOrange rounded-xl justify-center items-center flex-1 py-4"
                 onPress={() => router.push(`/pets/apply/${id}?type=foster` as any)}
               >
-                <Text className="text-[#D4622A] font-bold">Foster</Text>
+                <Text className="text-accentOrange font-bold">Foster</Text>
               </TouchableOpacity>
             )}
             {canAdopt && (
               <TouchableOpacity
-                className="bg-[#1E6B45] py-4 rounded-xl flex-1 items-center shadow-sm"
+                className="bg-primary py-4 rounded-xl flex-1 items-center shadow-sm"
                 onPress={() => router.push(`/pets/apply/${id}` as any)}
               >
                 <Text className="text-white font-bold text-base">Adopt</Text>
@@ -257,8 +258,8 @@ export default function PetProfile() {
         {/* Fully adopted — no actions available */}
         {!canAdopt && !canFoster && (
           <View className="px-6 pt-4">
-            <View className="rounded-xl bg-[#F3F4F6] dark:bg-gray-800 py-4 items-center">
-              <Text className="font-bold text-[#6B7280]">
+            <View className="rounded-xl bg-gray100 dark:bg-gray-800 py-4 items-center">
+              <Text className="font-bold text-muted">
                 This pet is no longer available
               </Text>
             </View>

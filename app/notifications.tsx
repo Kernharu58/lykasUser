@@ -5,6 +5,7 @@ import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "../components/StateView";
 import api from "../utils/api";
+import { COLORS } from "../utils/colors";
 
 const filters = ["All", "Applications", "Messages", "Payments", "Events"];
 
@@ -108,38 +109,38 @@ export default function Notifications() {
       });
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] px-6">
+    <SafeAreaView className="flex-1 bg-cream px-6">
       <LoadingState message="Loading notifications..." />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-cream dark:bg-gray-900">
       <View className="flex-row items-center px-6 mt-4 mb-6">
-        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#E8E4DC] dark:bg-gray-800">
-          <Ionicons name="arrow-back" size={20} color="#D4622A" />
+        <TouchableOpacity onPress={() => router.back()} className="h-10 w-10 items-center justify-center rounded-full bg-white border border-tan dark:bg-gray-800">
+          <Ionicons name="arrow-back" size={20} color={COLORS.accentOrange} />
         </TouchableOpacity>
-        <Text className="ml-4 text-2xl font-extrabold text-[#2C2C2C] dark:text-white">Notifications</Text>
+        <Text className="ml-4 text-2xl font-extrabold text-inkSoft dark:text-white">Notifications</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 80 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} colors={["#D4622A"]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchNotifications(); }} colors={[COLORS.accentOrange]} />}
       >
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
           <View className="flex-row gap-2">
             {filters.map((item) => (
               <TouchableOpacity key={item} onPress={() => setFilter(item)}
-                className={`rounded-full px-4 py-2 ${filter === item ? "bg-[#D4622A]" : "bg-white border border-[#E8E4DC] dark:bg-gray-800"}`}>
-                <Text className={`text-xs font-extrabold ${filter === item ? "text-white" : "text-[#7A7068] dark:text-gray-300"}`}>{item}</Text>
+                className={`rounded-full px-4 py-2 ${filter === item ? "bg-accentOrange" : "bg-white border border-tan dark:bg-gray-800"}`}>
+                <Text className={`text-xs font-extrabold ${filter === item ? "text-white" : "text-taupe dark:text-gray-300"}`}>{item}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </ScrollView>
 
         <View className="mb-4 flex-row gap-3">
-          <TouchableOpacity className="flex-1 rounded-2xl bg-[#EAF4EE] py-3" onPress={markAllRead}>
-            <Text className="text-center font-extrabold text-[#1E6B45]">Mark All Read</Text>
+          <TouchableOpacity className="flex-1 rounded-2xl bg-mintBg py-3" onPress={markAllRead}>
+            <Text className="text-center font-extrabold text-primary">Mark All Read</Text>
           </TouchableOpacity>
           <TouchableOpacity className="flex-1 rounded-2xl bg-red-50 py-3" onPress={deleteAll}>
             <Text className="text-center font-extrabold text-red-500">Clear All</Text>
@@ -159,19 +160,19 @@ export default function Notifications() {
           <View className="gap-3">
             {visible.map((item) => (
               <TouchableOpacity key={item._id}
-                className={`rounded-3xl border bg-white p-4 shadow-sm dark:bg-gray-800 ${!item.isRead ? "border-[#D4622A]" : "border-[#E8E4DC] dark:border-gray-700"}`}
+                className={`rounded-3xl border bg-white p-4 shadow-sm dark:bg-gray-800 ${!item.isRead ? "border-accentOrange" : "border-tan dark:border-gray-700"}`}
                 onPress={() => markRead(item._id)}>
                 <View className="flex-row items-start">
-                  <View className="h-11 w-11 items-center justify-center rounded-full bg-[#F5EDD6]">
-                    <Ionicons name={(iconMap[item.type] || "notifications-outline") as any} size={22} color="#D4622A" />
+                  <View className="h-11 w-11 items-center justify-center rounded-full bg-sandBg">
+                    <Ionicons name={(iconMap[item.type] || "notifications-outline") as any} size={22} color={COLORS.accentOrange} />
                   </View>
                   <View className="ml-4 flex-1">
                     <View className="flex-row items-center justify-between">
-                      <Text className="font-extrabold text-[#2C2C2C] dark:text-white flex-1 mr-2">{item.title}</Text>
-                      {!item.isRead && <View className="h-2.5 w-2.5 rounded-full bg-[#D4622A]" />}
+                      <Text className="font-extrabold text-inkSoft dark:text-white flex-1 mr-2">{item.title}</Text>
+                      {!item.isRead && <View className="h-2.5 w-2.5 rounded-full bg-accentOrange" />}
                     </View>
-                    <Text className="mt-1 text-sm leading-5 text-[#7A7068] dark:text-gray-400">{item.message}</Text>
-                    <Text className="mt-2 text-xs font-bold text-[#B0A898]">{timeAgo(item.createdAt)}</Text>
+                    <Text className="mt-1 text-sm leading-5 text-taupe dark:text-gray-400">{item.message}</Text>
+                    <Text className="mt-2 text-xs font-bold text-sand">{timeAgo(item.createdAt)}</Text>
                   </View>
                 </View>
               </TouchableOpacity>

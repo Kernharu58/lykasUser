@@ -4,9 +4,10 @@ import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../../utils/api";
+import { COLORS } from "../../../utils/colors";
 
-const GREEN = "#1E6B45";
-const ORANGE = "#D4622A";
+const GREEN = COLORS.primary;
+const ORANGE = COLORS.accentOrange;
 
 export default function AdoptionApplication() {
   const router = useRouter();
@@ -26,8 +27,8 @@ export default function AdoptionApplication() {
   const [loading, setLoading] = useState(false);
 
   const accentColor = isFoster ? ORANGE : GREEN;
-  const bgLight = isFoster ? "#FAF3EE" : "#F8FAF9";
-  const borderColor = isFoster ? "#F0DDD4" : "#DCE8E1";
+  const bgLight = isFoster ? COLORS.blush : COLORS.bgSoft;
+  const borderColor = isFoster ? COLORS.blushBorder : COLORS.border;
 
   const progress = useMemo(() => (step / 3) * 100, [step]);
   const canContinue =
@@ -122,7 +123,7 @@ export default function AdoptionApplication() {
                   className="rounded-2xl border px-4 py-4 text-gray-900 dark:text-white dark:bg-gray-700"
                   style={{ backgroundColor: bgLight, borderColor }}
                   placeholder="+63 912 345 6789"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={COLORS.mutedLight}
                   keyboardType="phone-pad"
                   value={phone}
                   onChangeText={setPhone}
@@ -132,7 +133,7 @@ export default function AdoptionApplication() {
                   className="rounded-2xl border px-4 py-4 text-gray-900 dark:text-white dark:bg-gray-700"
                   style={{ backgroundColor: bgLight, borderColor }}
                   placeholder="Angeles City, Pampanga"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={COLORS.mutedLight}
                   value={address}
                   onChangeText={setAddress}
                 />
@@ -166,7 +167,7 @@ export default function AdoptionApplication() {
                             borderColor,
                           }}
                         >
-                          <Text className="text-center font-bold" style={{ color: fosterPeriod === item ? "white" : "#7A7068" }}>
+                          <Text className="text-center font-bold" style={{ color: fosterPeriod === item ? "white" : COLORS.taupe }}>
                             {item}
                           </Text>
                         </TouchableOpacity>
@@ -188,7 +189,7 @@ export default function AdoptionApplication() {
                             borderColor,
                           }}
                         >
-                          <Text className="text-center font-bold" style={{ color: housing === item ? "white" : "#6B7280" }}>
+                          <Text className="text-center font-bold" style={{ color: housing === item ? "white" : COLORS.muted }}>
                             {item}
                           </Text>
                         </TouchableOpacity>
@@ -208,7 +209,7 @@ export default function AdoptionApplication() {
                       ? "Tell us about your home, daily schedule, and any pet care experience."
                       : "Tell us about your schedule, other pets, children, and pet care experience."
                   }
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={COLORS.mutedLight}
                   multiline
                   textAlignVertical="top"
                   value={experience}
@@ -239,13 +240,13 @@ export default function AdoptionApplication() {
                       ? "Explain your motivation and what you can offer during the foster period."
                       : "Share why this pet feels like the right match."
                   }
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={COLORS.mutedLight}
                   multiline
                   textAlignVertical="top"
                   value={reason}
                   onChangeText={setReason}
                 />
-                <View className="mt-5 rounded-2xl p-4" style={{ backgroundColor: isFoster ? "#FFF4EE" : "#EAF4EE" }}>
+                <View className="mt-5 rounded-2xl p-4" style={{ backgroundColor: isFoster ? COLORS.peachBg : COLORS.mintBg }}>
                   <Text className="font-bold" style={{ color: accentColor }}>
                     {isFoster
                       ? "I understand fostering is a temporary commitment and I will follow shelter guidelines."
@@ -260,13 +261,13 @@ export default function AdoptionApplication() {
         {/* Bottom nav buttons */}
         <View
           className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t px-6 py-4"
-          style={{borderTopWidth: 10, borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
+          style={{ borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
         >
           <View className="flex-row gap-3">
             {step > 1 && (
               <TouchableOpacity
-                className="flex-1 rounded-2xl border py-5"
-                style={{ borderColor: accentColor , height: 56 }}
+                className="flex-1 rounded-2xl border py-4"
+                style={{ borderColor: accentColor }}
                 onPress={() => setStep((v) => v - 1)}
               >
                 <Text className="text-center font-extrabold" style={{ color: accentColor }}>Back</Text>

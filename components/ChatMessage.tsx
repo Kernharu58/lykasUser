@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
+import { COLORS } from "../utils/colors";
 
 interface ChatMessageProps {
   item: {
@@ -47,9 +48,9 @@ export default function ChatMessage({ item }: ChatMessageProps) {
 
         <View className={`mt-1 flex-row items-center gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
           <Text className="text-[10px] text-gray-400">{messageTime}</Text>
-          {isUser && item.failed ? <Ionicons name="alert-circle" size={12} color="#ef4444" /> : null}
-          {isUser && item.pending ? <Ionicons name="time-outline" size={12} color="#9ca3af" /> : null}
-          {isUser && !item.pending && !item.failed ? <Ionicons name="checkmark-done" size={12} color="#4ade80" /> : null}
+          {isUser && item.failed ? <Ionicons name="alert-circle" size={12} color={COLORS.danger} /> : null}
+          {isUser && item.pending ? <Ionicons name="time-outline" size={12} color={COLORS.mutedLight} /> : null}
+          {isUser && !item.pending && !item.failed ? <Ionicons name="checkmark-done" size={12} color={COLORS.green400} /> : null}
         </View>
       </View>
     </View>

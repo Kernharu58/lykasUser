@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PetCard from "../../components/PetCard";
 import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 interface Pet {
   _id: string;
@@ -118,7 +119,7 @@ export default function Adopt() {
           className="flex-row items-center"
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={20} color="#2D6A4F" />
+          <Ionicons name="arrow-back" size={20} color={COLORS.primaryDeep} />
           <Text className="text-primary font-bold ml-1">Back</Text>
         </TouchableOpacity>
         <Text className="text-xl font-bold text-darkBlue dark:text-white">Adoption</Text>
@@ -127,18 +128,18 @@ export default function Adopt() {
 
       <View className="px-6 mb-4 z-50" style={{ zIndex: 50 }}>
         <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700">
-          <Ionicons name="search" size={20} color="#AAAAAA" />
+          <Ionicons name="search" size={20} color={COLORS.neutral} />
           <TextInput
             className="flex-1 ml-2 text-darkBlue dark:text-white font-medium"
             placeholder="Search by name or breed..."
-            placeholderTextColor="#AAAAAA"
+            placeholderTextColor={COLORS.neutral}
             value={searchQuery}
             onChangeText={handleSearch}
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={clearSearch}>
-              <Ionicons name="close-circle" size={20} color="#AAAAAA" />
+              <Ionicons name="close-circle" size={20} color={COLORS.neutral} />
             </TouchableOpacity>
           )}
         </View>
@@ -160,7 +161,7 @@ export default function Adopt() {
                   <Text className="text-darkBlue dark:text-white font-bold">{pet.name}</Text>
                   <Text className="text-neutral text-xs dark:text-gray-400">{pet.breed}</Text>
                 </View>
-                <Ionicons name="arrow-forward" size={16} color="#D1D5DB" />
+                <Ionicons name="arrow-forward" size={16} color={COLORS.gray300} />
               </TouchableOpacity>
             ))}
           </View>
@@ -174,8 +175,8 @@ export default function Adopt() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#2D6A4F"
-            colors={["#2D6A4F"]}
+            tintColor={COLORS.primaryDeep}
+            colors={[COLORS.primaryDeep]}
           />
         }
       >

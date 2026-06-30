@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TextInput, 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 const sections = [
   { title: "My Applications",  subtitle: "Track adoption and foster reviews",        icon: "clipboard-outline",      path: "/(tabs)/my-applications" },
@@ -86,28 +87,28 @@ export default function Profile() {
   const initial = (user?.displayName || "C").charAt(0).toUpperCase();
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchStats(); }} colors={["#1E6B45"]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchStats(); }} colors={[COLORS.primary]} />}
       >
         {/* Avatar + name */}
         <View className="mt-6 items-center">
-          <View className="h-24 w-24 items-center justify-center rounded-full bg-[#1E6B45] shadow-sm">
+          <View className="h-24 w-24 items-center justify-center rounded-full bg-primary shadow-sm">
             <Text className="text-4xl font-extrabold text-white">{initial}</Text>
           </View>
 
           {editMode ? (
             <View className="mt-4 w-full items-center gap-3">
               <TextInput value={displayName} onChangeText={setDisplayName}
-                placeholder="Display name" placeholderTextColor="#9CA3AF"
-                className="w-full rounded-2xl border border-[#DCE8E1] bg-white px-4 py-3 text-center text-xl font-extrabold text-[#111827] dark:bg-gray-800 dark:text-white" />
+                placeholder="Display name" placeholderTextColor={COLORS.mutedLight}
+                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-center text-xl font-extrabold text-ink dark:bg-gray-800 dark:text-white" />
               <View className="flex-row gap-3">
-                <TouchableOpacity className="flex-1 rounded-2xl border border-[#DCE8E1] py-3" onPress={() => { setEditMode(false); setDisplayName(user?.displayName || ""); }}>
-                  <Text className="text-center font-bold text-[#6B7280]">Cancel</Text>
+                <TouchableOpacity className="flex-1 rounded-2xl border border-border py-3" onPress={() => { setEditMode(false); setDisplayName(user?.displayName || ""); }}>
+                  <Text className="text-center font-bold text-muted">Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="flex-1 rounded-2xl bg-[#1E6B45] py-3" onPress={handleSave} disabled={saving}>
+                <TouchableOpacity className="flex-1 rounded-2xl bg-primary py-3" onPress={handleSave} disabled={saving}>
                   {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-center font-bold text-white">Save</Text>}
                 </TouchableOpacity>
               </View>
@@ -115,23 +116,23 @@ export default function Profile() {
           ) : (
             <View className="mt-4 items-center">
               <View className="flex-row items-center gap-2">
-                <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">{user?.displayName || "CarePaws User"}</Text>
+                <Text className="text-2xl font-extrabold text-ink dark:text-white">{user?.displayName || "CarePaws User"}</Text>
                 <TouchableOpacity onPress={() => setEditMode(true)}>
-                  <Ionicons name="pencil-outline" size={18} color="#6B7280" />
+                  <Ionicons name="pencil-outline" size={18} color={COLORS.muted} />
                 </TouchableOpacity>
               </View>
-              <Text className="mt-1 text-sm font-medium text-[#6B7280] dark:text-gray-400">{user?.email}</Text>
-              <View className="mt-2 rounded-full bg-[#EAF4EE] px-3 py-1">
-                <Text className="text-xs font-bold text-[#3D8A5E]">Verified pet parent</Text>
+              <Text className="mt-1 text-sm font-medium text-muted dark:text-gray-400">{user?.email}</Text>
+              <View className="mt-2 rounded-full bg-mintBg px-3 py-1">
+                <Text className="text-xs font-bold text-mintDeep">Verified pet parent</Text>
               </View>
             </View>
           )}
         </View>
 
         {/* Stats card */}
-        <View className="mt-7 rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800 dark:border-gray-700">
-          <Text className="text-lg font-extrabold text-[#111827] dark:text-white">Care progress</Text>
-          {loading ? <ActivityIndicator color="#1E6B45" className="mt-4" /> : (
+        <View className="mt-7 rounded-3xl border border-border bg-white p-5 dark:bg-gray-800 dark:border-gray-700">
+          <Text className="text-lg font-extrabold text-ink dark:text-white">Care progress</Text>
+          {loading ? <ActivityIndicator color={COLORS.primary} className="mt-4" /> : (
             <View className="mt-4 flex-row justify-between">
               {[
                 [String(stats.totalApps), "Total Apps"],
@@ -140,8 +141,8 @@ export default function Profile() {
                 [stats.compliance,        "Status"],
               ].map(([value, label]) => (
                 <View key={label} className="items-center">
-                  <Text className="text-2xl font-extrabold text-[#1E6B45]">{value}</Text>
-                  <Text className="text-xs font-bold text-[#6B7280]">{label}</Text>
+                  <Text className="text-2xl font-extrabold text-primary">{value}</Text>
+                  <Text className="text-xs font-bold text-muted">{label}</Text>
                 </View>
               ))}
             </View>
@@ -152,16 +153,16 @@ export default function Profile() {
         <View className="mt-6 gap-3">
           {sections.map((item) => (
             <TouchableOpacity key={item.title}
-              className="flex-row items-center rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800 dark:border-gray-700"
+              className="flex-row items-center rounded-3xl border border-border bg-white p-4 dark:bg-gray-800 dark:border-gray-700"
               onPress={() => router.push(item.path as any)}>
-              <View className="h-11 w-11 items-center justify-center rounded-full bg-[#EAF4EE]">
-                <Ionicons name={item.icon as any} size={22} color="#1E6B45" />
+              <View className="h-11 w-11 items-center justify-center rounded-full bg-mintBg">
+                <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
               </View>
               <View className="ml-4 flex-1">
-                <Text className="font-extrabold text-[#111827] dark:text-white">{item.title}</Text>
-                <Text className="text-sm text-[#6B7280] dark:text-gray-400">{item.subtitle}</Text>
+                <Text className="font-extrabold text-ink dark:text-white">{item.title}</Text>
+                <Text className="text-sm text-muted dark:text-gray-400">{item.subtitle}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#B0A898" />
+              <Ionicons name="chevron-forward" size={20} color={COLORS.sand} />
             </TouchableOpacity>
           ))}
         </View>

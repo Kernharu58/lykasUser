@@ -14,7 +14,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { formatDate, formatDateLong } from "../../utils/format";
 import api from "../../utils/api";
+import { COLORS } from "../../utils/colors";
 
 const CATEGORIES = ["General", "Milestone", "Health", "Funny Moment", "Training", "First Time"];
 
@@ -28,12 +30,12 @@ const categoryIcon: Record<string, string> = {
 };
 
 const categoryColor: Record<string, string> = {
-  Milestone:      "#8B5CF6",
-  Health:         "#EF4444",
-  "Funny Moment": "#F59E0B",
-  Training:       "#3B82F6",
-  "First Time":   "#EC4899",
-  General:        "#6B7280",
+  Milestone:      COLORS.purple,
+  Health:         COLORS.danger,
+  "Funny Moment": COLORS.amber,
+  Training:       COLORS.blue,
+  "First Time":   COLORS.pink,
+  General:        COLORS.muted,
 };
 
 export default function BabyBook() {
@@ -113,28 +115,28 @@ export default function BabyBook() {
     : entries.filter(e => e.category === filterCat);
 
   if (loading) return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] items-center justify-center">
-      <ActivityIndicator size="large" color="#D4622A" />
+    <SafeAreaView className="flex-1 bg-cream items-center justify-center">
+      <ActivityIndicator size="large" color={COLORS.accentOrange} />
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FDFAF4] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-cream dark:bg-gray-900">
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 mt-4 mb-5">
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#E8E4DC] dark:bg-gray-800">
-            <Ionicons name="arrow-back" size={20} color="#D4622A" />
+            className="h-10 w-10 items-center justify-center rounded-full bg-white border border-tan dark:bg-gray-800">
+            <Ionicons name="arrow-back" size={20} color={COLORS.accentOrange} />
           </TouchableOpacity>
           <View className="ml-4">
-            <Text className="text-2xl font-extrabold text-[#2C2C2C] dark:text-white">Baby Book</Text>
-            <Text className="text-xs font-bold text-[#B0A898]">{entries.length} entries</Text>
+            <Text className="text-2xl font-extrabold text-inkSoft dark:text-white">Baby Book</Text>
+            <Text className="text-xs font-bold text-sand">{entries.length} entries</Text>
           </View>
         </View>
         <TouchableOpacity
-          className="h-10 w-10 items-center justify-center rounded-full bg-[#D4622A]"
+          className="h-10 w-10 items-center justify-center rounded-full bg-accentOrange"
           onPress={() => setShowModal(true)}>
           <Ionicons name="add" size={22} color="white" />
         </TouchableOpacity>
@@ -146,12 +148,12 @@ export default function BabyBook() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => { setRefreshing(true); fetchAll(); }}
-            colors={["#D4622A"]}
+            colors={[COLORS.accentOrange]}
           />
         }
       >
         {/* Hero banner */}
-        <View className="mx-6 rounded-3xl bg-[#D4622A] p-5 mb-5">
+        <View className="mx-6 rounded-3xl bg-accentOrange p-5 mb-5">
           <Text className="text-2xl font-extrabold text-white">Pet Memory Book 🐾</Text>
           <Text className="mt-2 text-sm leading-5 text-white/90">
             Milestones, health updates, funny moments, and shelter follow-ups — all in one place.
@@ -175,8 +177,8 @@ export default function BabyBook() {
               <TouchableOpacity
                 key={cat}
                 onPress={() => setFilterCat(cat)}
-                className={`rounded-full px-4 py-2 ${filterCat === cat ? "bg-[#D4622A]" : "bg-white border border-[#E8E4DC] dark:bg-gray-800"}`}>
-                <Text className={`text-xs font-extrabold ${filterCat === cat ? "text-white" : "text-[#7A7068] dark:text-gray-300"}`}>{cat}</Text>
+                className={`rounded-full px-4 py-2 ${filterCat === cat ? "bg-accentOrange" : "bg-white border border-tan dark:bg-gray-800"}`}>
+                <Text className={`text-xs font-extrabold ${filterCat === cat ? "text-white" : "text-taupe dark:text-gray-300"}`}>{cat}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -186,20 +188,20 @@ export default function BabyBook() {
         <View className="px-6 gap-3">
           {visibleEntries.length === 0 ? (
             <View className="items-center mt-10">
-              <Ionicons name="book-outline" size={56} color="#E8E4DC" />
-              <Text className="mt-4 font-extrabold text-[#2C2C2C] dark:text-white">No entries yet</Text>
-              <Text className="mt-2 text-sm text-[#7A7068] text-center">
+              <Ionicons name="book-outline" size={56} color={COLORS.tan} />
+              <Text className="mt-4 font-extrabold text-inkSoft dark:text-white">No entries yet</Text>
+              <Text className="mt-2 text-sm text-taupe text-center">
                 Tap the + button to add your first memory.
               </Text>
             </View>
           ) : (
             visibleEntries.map(entry => {
-              const color = categoryColor[entry.category] || "#6B7280";
+              const color = categoryColor[entry.category] || COLORS.muted;
               const icon  = categoryIcon[entry.category]  || "document-text-outline";
               return (
                 <View
                   key={entry._id}
-                  className="rounded-3xl bg-white border border-[#E8E4DC] p-4 dark:bg-gray-800 dark:border-gray-700">
+                  className="rounded-3xl bg-white border border-tan p-4 dark:bg-gray-800 dark:border-gray-700">
                   <View className="flex-row items-start justify-between">
                     <View className="flex-row items-center flex-1 mr-2">
                       <View
@@ -211,24 +213,22 @@ export default function BabyBook() {
                         <Text className="text-xs font-bold uppercase tracking-widest" style={{ color }}>
                           {entry.category}
                         </Text>
-                        <Text className="font-extrabold text-[#2C2C2C] dark:text-white mt-0.5">{entry.title}</Text>
+                        <Text className="font-extrabold text-inkSoft dark:text-white mt-0.5">{entry.title}</Text>
                       </View>
                     </View>
                     <TouchableOpacity onPress={() => handleDelete(entry._id)} className="p-1">
-                      <Ionicons name="trash-outline" size={16} color="#B0A898" />
+                      <Ionicons name="trash-outline" size={16} color={COLORS.sand} />
                     </TouchableOpacity>
                   </View>
 
                   {entry.content ? (
-                    <Text className="mt-3 text-sm leading-5 text-[#7A7068] dark:text-gray-400">
+                    <Text className="mt-3 text-sm leading-5 text-taupe dark:text-gray-400">
                       {entry.content}
                     </Text>
                   ) : null}
 
-                  <Text className="mt-3 text-xs text-[#B0A898]">
-                    {new Date(entry.date || entry.createdAt).toLocaleDateString("en-PH", {
-                      month: "long", day: "numeric", year: "numeric",
-                    })}
+                  <Text className="mt-3 text-xs text-sand">
+                    {formatDateLong(entry.date || entry.createdAt)}
                     {entry.addedBy?.displayName ? ` · by ${entry.addedBy.displayName}` : ""}
                   </Text>
                 </View>
@@ -240,29 +240,29 @@ export default function BabyBook() {
         {/* Vaccinations section */}
         {vaccinations.length > 0 && (
           <View className="px-6 mt-7">
-            <Text className="mb-3 text-xl font-extrabold text-[#2C2C2C] dark:text-white">Vaccinations</Text>
+            <Text className="mb-3 text-xl font-extrabold text-inkSoft dark:text-white">Vaccinations</Text>
             <View className="gap-3">
               {vaccinations.map(v => {
                 const isDue = v.nextDueDate && new Date(v.nextDueDate) <= new Date();
                 return (
                   <View
                     key={v._id}
-                    className="flex-row items-center rounded-3xl bg-white border border-[#E8E4DC] p-4 dark:bg-gray-800">
-                    <View className="h-11 w-11 items-center justify-center rounded-full bg-[#F5EDD6]">
-                      <Ionicons name="medical" size={20} color="#D4622A" />
+                    className="flex-row items-center rounded-3xl bg-white border border-tan p-4 dark:bg-gray-800">
+                    <View className="h-11 w-11 items-center justify-center rounded-full bg-sandBg">
+                      <Ionicons name="medical" size={20} color={COLORS.accentOrange} />
                     </View>
                     <View className="ml-4 flex-1">
-                      <Text className="font-extrabold text-[#2C2C2C] dark:text-white">{v.vaccineName}</Text>
-                      <Text className="text-xs text-[#7A7068] mt-0.5">
-                        Given: {new Date(v.dateGiven).toLocaleDateString()}
+                      <Text className="font-extrabold text-inkSoft dark:text-white">{v.vaccineName}</Text>
+                      <Text className="text-xs text-taupe mt-0.5">
+                        Given: {formatDate(v.dateGiven)}
                       </Text>
                       {v.nextDueDate && (
-                        <Text className="text-xs text-[#7A7068]">
-                          Next due: {new Date(v.nextDueDate).toLocaleDateString()}
+                        <Text className="text-xs text-taupe">
+                          Next due: {formatDate(v.nextDueDate)}
                         </Text>
                       )}
                     </View>
-                    <Text className={`text-xs font-bold ${isDue ? "text-red-500" : "text-[#1E6B45]"}`}>
+                    <Text className={`text-xs font-bold ${isDue ? "text-red-500" : "text-primary"}`}>
                       {isDue ? "Overdue" : "Current"}
                     </Text>
                   </View>
@@ -275,30 +275,30 @@ export default function BabyBook() {
         {/* Quick actions */}
         <View className="mx-6 mt-6 flex-row gap-3">
           <TouchableOpacity
-            className="flex-1 rounded-2xl bg-[#D4622A] py-4"
+            className="flex-1 rounded-2xl bg-accentOrange py-4"
             onPress={() => router.push(`/health/${petId}` as any)}>
             <Text className="text-center font-extrabold text-white">Health Dashboard</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className="flex-1 rounded-2xl border border-[#D4622A] py-4"
+            className="flex-1 rounded-2xl border border-accentOrange py-4"
             onPress={() => router.push("/monitoring-report" as any)}>
-            <Text className="text-center font-extrabold text-[#D4622A]">Submit Report</Text>
+            <Text className="text-center font-extrabold text-accentOrange">Submit Report</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       {/* Add Entry Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-[#FDFAF4] dark:bg-gray-900">
+        <SafeAreaView className="flex-1 bg-cream dark:bg-gray-900">
           <View className="flex-row items-center justify-between px-6 mt-4 mb-6">
-            <Text className="text-2xl font-extrabold text-[#2C2C2C] dark:text-white">New Entry</Text>
+            <Text className="text-2xl font-extrabold text-inkSoft dark:text-white">New Entry</Text>
             <TouchableOpacity onPress={() => setShowModal(false)}>
-              <Ionicons name="close" size={24} color="#7A7068" />
+              <Ionicons name="close" size={24} color={COLORS.taupe} />
             </TouchableOpacity>
           </View>
 
           <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 60 }}>
-            <Text className="mb-2 font-extrabold text-[#2C2C2C] dark:text-white">Category</Text>
+            <Text className="mb-2 font-extrabold text-inkSoft dark:text-white">Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
               <View className="flex-row gap-2">
                 {CATEGORIES.map(cat => {
@@ -311,11 +311,11 @@ export default function BabyBook() {
                       className="rounded-2xl px-4 py-2 border"
                       style={{
                         backgroundColor: active ? color : "white",
-                        borderColor: active ? color : "#E8E4DC",
+                        borderColor: active ? color : COLORS.tan,
                       }}>
                       <Text
                         className="text-xs font-extrabold"
-                        style={{ color: active ? "white" : "#7A7068" }}>
+                        style={{ color: active ? "white" : COLORS.taupe }}>
                         {cat}
                       </Text>
                     </TouchableOpacity>
@@ -324,28 +324,28 @@ export default function BabyBook() {
               </View>
             </ScrollView>
 
-            <Text className="mb-2 font-extrabold text-[#2C2C2C] dark:text-white">Title *</Text>
+            <Text className="mb-2 font-extrabold text-inkSoft dark:text-white">Title *</Text>
             <TextInput
               value={entryTitle}
               onChangeText={setEntryTitle}
               placeholder="e.g. First time playing outside!"
-              placeholderTextColor="#B0A898"
-              className="mb-5 rounded-2xl border border-[#E8E4DC] bg-white px-4 py-4 text-[#2C2C2C] dark:bg-gray-800 dark:text-white"
+              placeholderTextColor={COLORS.sand}
+              className="mb-5 rounded-2xl border border-tan bg-white px-4 py-4 text-inkSoft dark:bg-gray-800 dark:text-white"
             />
 
-            <Text className="mb-2 font-extrabold text-[#2C2C2C] dark:text-white">Details (optional)</Text>
+            <Text className="mb-2 font-extrabold text-inkSoft dark:text-white">Details (optional)</Text>
             <TextInput
               value={entryContent}
               onChangeText={setEntryContent}
               placeholder="Share what happened..."
-              placeholderTextColor="#B0A898"
+              placeholderTextColor={COLORS.sand}
               multiline
               textAlignVertical="top"
-              className="mb-6 min-h-[120px] rounded-2xl border border-[#E8E4DC] bg-white px-4 py-4 text-[#2C2C2C] dark:bg-gray-800 dark:text-white"
+              className="mb-6 min-h-[120px] rounded-2xl border border-tan bg-white px-4 py-4 text-inkSoft dark:bg-gray-800 dark:text-white"
             />
 
             <TouchableOpacity
-              className="rounded-2xl bg-[#D4622A] py-4"
+              className="rounded-2xl bg-accentOrange py-4"
               onPress={handleAddEntry}
               disabled={saving}>
               {saving

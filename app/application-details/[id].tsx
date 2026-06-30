@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../utils/api";
+import { formatDateLong, formatDateLongWithWeekday } from "../../utils/format";
+import { COLORS } from "../../utils/colors";
 
 // ─── Timeline data ────────────────────────────────────────────────────────────
 const ADOPTION_STEPS = [
@@ -71,20 +73,16 @@ function AgreementSection({
 
   if (alreadySigned) {
     return (
-      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800">
+      <View className="mt-5 rounded-3xl border border-border bg-white p-5 dark:bg-gray-800">
         <View className="flex-row items-center gap-2 mb-1">
-          <Ionicons name="checkmark-circle" size={20} color="#1E6B45" />
-          <Text className="font-extrabold text-[#111827] dark:text-white">
+          <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
+          <Text className="font-extrabold text-ink dark:text-white">
             Adoption Agreement
           </Text>
         </View>
-        <Text className="text-sm text-[#6B7280] dark:text-gray-400">
+        <Text className="text-sm text-muted dark:text-gray-400">
           Signed on{" "}
-          {new Date(app.agreementSignedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          {formatDateLong(app.agreementSignedAt)}
         </Text>
         {app.agreementDocumentUrl && (
           <TouchableOpacity
@@ -140,14 +138,14 @@ function AgreementSection({
     >
       <View className="flex-row items-center gap-2 mb-2">
         <Ionicons name="document-text-outline" size={20} color={accentColor} />
-        <Text className="font-extrabold text-[#111827] dark:text-white">
+        <Text className="font-extrabold text-ink dark:text-white">
           Adoption Agreement
         </Text>
-        <View className="rounded-full px-2 py-0.5 bg-[#FEF3E2]">
-          <Text className="text-xs font-bold text-[#92400E]">Action needed</Text>
+        <View className="rounded-full px-2 py-0.5 bg-warningBg">
+          <Text className="text-xs font-bold text-brown">Action needed</Text>
         </View>
       </View>
-      <Text className="text-sm text-[#6B7280] dark:text-gray-400 leading-5 mb-4">
+      <Text className="text-sm text-muted dark:text-gray-400 leading-5 mb-4">
         Please read and sign the adoption agreement before your application can
         proceed to the interview stage.
       </Text>
@@ -183,23 +181,18 @@ function InterviewSection({
   if (interview) {
     const resultColor =
       interview.result === "passed"
-        ? "#1E6B45"
+        ? COLORS.primary
         : interview.result === "failed"
-        ? "#EF4444"
-        : "#E8A020";
+        ? COLORS.danger
+        : COLORS.warning;
 
     return (
-      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800">
-        <Text className="font-extrabold text-[#111827] dark:text-white mb-1">
+      <View className="mt-5 rounded-3xl border border-border bg-white p-5 dark:bg-gray-800">
+        <Text className="font-extrabold text-ink dark:text-white mb-1">
           Interview
         </Text>
-        <Text className="text-sm text-[#6B7280] dark:text-gray-400">
-          {new Date(interview.scheduledDate).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+        <Text className="text-sm text-muted dark:text-gray-400">
+          {formatDateLongWithWeekday(interview.scheduledDate)}
           {interview.method ? ` · ${interview.method}` : ""}
           {interview.location ? ` · ${interview.location}` : " · TBD"}
         </Text>
@@ -213,12 +206,12 @@ function InterviewSection({
   // Agreement must be signed first
   if (!app.agreementSignedAt) {
     return (
-      <View className="mt-5 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
+      <View className="mt-5 rounded-3xl border border-border bg-white p-4 dark:bg-gray-800">
         <View className="flex-row items-center gap-2">
-          <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
-          <Text className="font-extrabold text-[#9CA3AF]">Interview Scheduling</Text>
+          <Ionicons name="lock-closed-outline" size={18} color={COLORS.mutedLight} />
+          <Text className="font-extrabold text-mutedLight">Interview Scheduling</Text>
         </View>
-        <Text className="mt-1 text-sm text-[#B0A898]">
+        <Text className="mt-1 text-sm text-sand">
           Sign the adoption agreement above to unlock interview scheduling.
         </Text>
       </View>
@@ -233,14 +226,14 @@ function InterviewSection({
     >
       <View className="flex-row items-center gap-2 mb-2">
         <Ionicons name="calendar-outline" size={20} color={accentColor} />
-        <Text className="font-extrabold text-[#111827] dark:text-white">
+        <Text className="font-extrabold text-ink dark:text-white">
           Schedule Interview
         </Text>
-        <View className="rounded-full px-2 py-0.5 bg-[#FEF3E2]">
-          <Text className="text-xs font-bold text-[#92400E]">Action needed</Text>
+        <View className="rounded-full px-2 py-0.5 bg-warningBg">
+          <Text className="text-xs font-bold text-brown">Action needed</Text>
         </View>
       </View>
-      <Text className="text-sm text-[#6B7280] dark:text-gray-400 leading-5 mb-4">
+      <Text className="text-sm text-muted dark:text-gray-400 leading-5 mb-4">
         Staff are ready to meet you. Pick a time slot for your adoption interview.
       </Text>
       <TouchableOpacity
@@ -262,23 +255,18 @@ function HomeVisitSection({ homeVisit }: { homeVisit: any }) {
 
   const resultColor =
     homeVisit.result === "passed"
-      ? "#1E6B45"
+      ? COLORS.primary
       : homeVisit.result === "failed"
-      ? "#EF4444"
-      : "#E8A020";
+      ? COLORS.danger
+      : COLORS.warning;
 
   return (
-    <View className="mt-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
-      <Text className="font-extrabold text-[#111827] dark:text-white mb-1">
+    <View className="mt-3 rounded-3xl border border-border bg-white p-4 dark:bg-gray-800">
+      <Text className="font-extrabold text-ink dark:text-white mb-1">
         Home Visit
       </Text>
-      <Text className="text-sm text-[#6B7280] dark:text-gray-400">
-        {new Date(homeVisit.scheduledDate).toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
+      <Text className="text-sm text-muted dark:text-gray-400">
+        {formatDateLongWithWeekday(homeVisit.scheduledDate)}
         {homeVisit.address ? ` · ${homeVisit.address}` : ""}
       </Text>
       <Text className="mt-1 text-sm font-bold capitalize" style={{ color: resultColor }}>
@@ -328,20 +316,20 @@ export default function ApplicationDetails() {
 
   if (loading)
     return (
-      <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-        <ActivityIndicator size="large" color="#1E6B45" />
+      <SafeAreaView className="flex-1 bg-bgSoft items-center justify-center">
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </SafeAreaView>
     );
 
   if (!app)
     return (
-      <SafeAreaView className="flex-1 bg-[#F8FAF9] items-center justify-center">
-        <Text className="text-[#6B7280]">Application not found.</Text>
+      <SafeAreaView className="flex-1 bg-bgSoft items-center justify-center">
+        <Text className="text-muted">Application not found.</Text>
       </SafeAreaView>
     );
 
   const isFoster = app.type === "foster";
-  const accentColor = isFoster ? "#D4622A" : "#1E6B45";
+  const accentColor = isFoster ? COLORS.accentOrange : COLORS.primary;
   const steps = isFoster ? FOSTER_STEPS : ADOPTION_STEPS;
   const completedSteps = isFoster
     ? getFosterCompletedSteps(app)
@@ -353,20 +341,20 @@ export default function ApplicationDetails() {
     !isFoster && app.status !== "rejected" && app.status !== "approved";
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8FAF9] dark:bg-gray-900">
+    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       {/* Header */}
       <View className="flex-row items-center px-6 mt-4 mb-5">
         <TouchableOpacity
           onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-white border border-[#DCE8E1] dark:bg-gray-800"
+          className="h-10 w-10 items-center justify-center rounded-full bg-white border border-border dark:bg-gray-800"
         >
           <Ionicons name="arrow-back" size={20} color={accentColor} />
         </TouchableOpacity>
         <View className="ml-4">
-          <Text className="text-2xl font-extrabold text-[#111827] dark:text-white">
+          <Text className="text-2xl font-extrabold text-ink dark:text-white">
             Application Details
           </Text>
-          <Text className="text-xs font-bold text-[#6B7280]">
+          <Text className="text-xs font-bold text-muted">
             {app._id?.slice(-10).toUpperCase()}
           </Text>
         </View>
@@ -394,37 +382,37 @@ export default function ApplicationDetails() {
         </View>
 
         {/* Timeline */}
-        <Text className="mt-7 mb-3 text-xl font-extrabold text-[#111827] dark:text-white">
+        <Text className="mt-7 mb-3 text-xl font-extrabold text-ink dark:text-white">
           {isFoster ? "Foster Timeline" : "Adoption Timeline"}
         </Text>
-        <View className="rounded-3xl border border-[#DCE8E1] bg-white p-5 dark:bg-gray-800">
+        <View className="rounded-3xl border border-border bg-white p-5 dark:bg-gray-800">
           {steps.map((label, i) => (
             <View key={label} className="flex-row">
               <View className="items-center">
                 <View
                   className="h-8 w-8 items-center justify-center rounded-full"
                   style={{
-                    backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB",
+                    backgroundColor: completedSteps[i] ? accentColor : COLORS.gray200,
                   }}
                 >
                   <Ionicons
                     name={completedSteps[i] ? "checkmark" : "ellipse-outline"}
                     size={16}
-                    color={completedSteps[i] ? "white" : "#9CA3AF"}
+                    color={completedSteps[i] ? "white" : COLORS.mutedLight}
                   />
                 </View>
                 {i !== steps.length - 1 && (
                   <View
                     className="h-8 w-0.5"
                     style={{
-                      backgroundColor: completedSteps[i] ? accentColor : "#E5E7EB",
+                      backgroundColor: completedSteps[i] ? accentColor : COLORS.gray200,
                     }}
                   />
                 )}
               </View>
               <Text
                 className="ml-3 mt-1 font-bold"
-                style={{ color: completedSteps[i] ? "#111827" : "#9CA3AF" }}
+                style={{ color: completedSteps[i] ? COLORS.ink : COLORS.mutedLight }}
               >
                 {label}
               </Text>
@@ -435,10 +423,10 @@ export default function ApplicationDetails() {
         {/* ── Assessment actions (adoption only, while in progress) ── */}
         {showAssessmentActions && (
           <>
-            <Text className="mt-7 mb-1 text-xl font-extrabold text-[#111827] dark:text-white">
+            <Text className="mt-7 mb-1 text-xl font-extrabold text-ink dark:text-white">
               Actions needed
             </Text>
-            <Text className="text-sm text-[#6B7280] dark:text-gray-400 mb-2">
+            <Text className="text-sm text-muted dark:text-gray-400 mb-2">
               Complete these steps to move your application forward.
             </Text>
 
@@ -463,23 +451,19 @@ export default function ApplicationDetails() {
 
         {/* Foster period */}
         {isFoster && app.fosterPeriod && (
-          <View className="mt-5 rounded-3xl border border-[#F0DDD4] bg-[#FFF4EE] p-4">
-            <Text className="font-extrabold text-[#D4622A]">Foster Period</Text>
-            <Text className="mt-1 text-sm text-[#7A7068]">{app.fosterPeriod}</Text>
+          <View className="mt-5 rounded-3xl border border-blushBorder bg-peachBg p-4">
+            <Text className="font-extrabold text-accentOrange">Foster Period</Text>
+            <Text className="mt-1 text-sm text-taupe">{app.fosterPeriod}</Text>
           </View>
         )}
 
         {/* Applied on */}
-        <View className="mt-3 rounded-3xl border border-[#DCE8E1] bg-white p-4 dark:bg-gray-800">
-          <Text className="font-extrabold text-[#111827] dark:text-white">
+        <View className="mt-3 rounded-3xl border border-border bg-white p-4 dark:bg-gray-800">
+          <Text className="font-extrabold text-ink dark:text-white">
             Applied on
           </Text>
-          <Text className="mt-1 text-sm text-[#6B7280]">
-            {new Date(app.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+          <Text className="mt-1 text-sm text-muted">
+            {formatDateLong(app.createdAt)}
           </Text>
         </View>
       </ScrollView>
