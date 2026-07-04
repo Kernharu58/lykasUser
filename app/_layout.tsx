@@ -38,9 +38,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)" options={{ animation: "fade", animationDuration: 350 }} />
         <Stack.Screen name="pets/[id]" />
-        {/* BUG FIX: Missing screens that exist in the file system */}
         <Stack.Screen name="pets/apply/[id]" />
         <Stack.Screen name="appointments/index" />
         <Stack.Screen name="appointments/apply/[id]" />
@@ -52,7 +51,6 @@ export default function RootLayout() {
         <Stack.Screen name="foster/[petId]" />
         <Stack.Screen name="documents" />
         <Stack.Screen name="payments" />
-        {/* FIX (Warning #3): Register payment callback screens for deep-link handling */}
         <Stack.Screen name="payment/success" />
         <Stack.Screen name="payment/cancel" />
         <Stack.Screen name="volunteer-portal" />
@@ -62,7 +60,6 @@ export default function RootLayout() {
         <Stack.Screen name="favorites" />
         <Stack.Screen name="my-pets" />
         <Stack.Screen name="notifications" />
-        {/* BUG FIX: Missing auth flow screens */}
         <Stack.Screen name="verify-email" />
         <Stack.Screen name="reset-password" />
         <Stack.Screen name="forgot-password" />

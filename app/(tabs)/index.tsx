@@ -81,7 +81,7 @@ export default function Discover() {
   return (
     <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPets(); }} tintColor={COLORS.primary} colors={[COLORS.primary]} />}
       >
         <View className="mt-4 flex-row items-center justify-between">

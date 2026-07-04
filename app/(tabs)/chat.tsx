@@ -272,7 +272,7 @@ export default function ChatScreen() {
           </ScrollView>
 
           <View className="flex-row items-end pb-16">
-            <TouchableOpacity className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-mintBg" onPress={() => Alert.alert("Attachments", "Photo and document attachments can be connected to the chat API next.")}>
+            <TouchableOpacity className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-green" onPress={() => Alert.alert("Attachments", "Photo and document attachments can be connected to the chat API next.")}>
               <Ionicons name="add" size={24} color={GREEN} />
             </TouchableOpacity>
             <TextInput

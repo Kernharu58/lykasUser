@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -58,113 +57,6 @@ function getFosterCompletedSteps(app: any): boolean[] {
   return [true, app.status !== "pending", approved, approved];
 }
 
-// ─── Agreement sign-off section ───────────────────────────────────────────────
-function AgreementSection({
-  app,
-  accentColor,
-  onAgreementSigned,
-}: {
-  app: any;
-  accentColor: string;
-  onAgreementSigned: () => void;
-}) {
-  const [signing, setSigning] = useState(false);
-  const alreadySigned = !!app.agreementSignedAt;
-
-  if (alreadySigned) {
-    return (
-      <View className="mt-5 rounded-3xl border border-border bg-white p-5 dark:bg-gray-800">
-        <View className="flex-row items-center gap-2 mb-1">
-          <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
-          <Text className="font-extrabold text-ink dark:text-white">
-            Adoption Agreement
-          </Text>
-        </View>
-        <Text className="text-sm text-muted dark:text-gray-400">
-          Signed on{" "}
-          {formatDateLong(app.agreementSignedAt)}
-        </Text>
-        {app.agreementDocumentUrl && (
-          <TouchableOpacity
-            className="mt-3 flex-row items-center gap-1"
-            onPress={() => Linking.openURL(app.agreementDocumentUrl)}
-          >
-            <Ionicons name="document-text-outline" size={16} color={accentColor} />
-            <Text className="text-sm font-bold" style={{ color: accentColor }}>
-              View signed document
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  }
-
-  const handleSign = () => {
-    Alert.alert(
-      "Sign Adoption Agreement",
-      "By confirming, you acknowledge that you have read and agree to the shelter's adoption terms, including home visit requirements and post-adoption check-ins.",
-      [
-        { text: "Review Later", style: "cancel" },
-        {
-          text: "I Agree & Sign",
-          onPress: async () => {
-            setSigning(true);
-            try {
-              await api.post(`/applications/${app._id}/sign-agreement`);
-              Alert.alert(
-                "Agreement signed",
-                "Thank you! Your signed agreement has been recorded. Staff will contact you about next steps.",
-              );
-              onAgreementSigned();
-            } catch (err: any) {
-              Alert.alert(
-                "Error",
-                err.response?.data?.message ||
-                  "Could not record your signature. Please try again.",
-              );
-            } finally {
-              setSigning(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  return (
-    <View
-      className="mt-5 rounded-3xl border p-5"
-      style={{ borderColor: accentColor + "40", backgroundColor: accentColor + "10" }}
-    >
-      <View className="flex-row items-center gap-2 mb-2">
-        <Ionicons name="document-text-outline" size={20} color={accentColor} />
-        <Text className="font-extrabold text-ink dark:text-white">
-          Adoption Agreement
-        </Text>
-        <View className="rounded-full px-2 py-0.5 bg-warningBg">
-          <Text className="text-xs font-bold text-brown">Action needed</Text>
-        </View>
-      </View>
-      <Text className="text-sm text-muted dark:text-gray-400 leading-5 mb-4">
-        Please read and sign the adoption agreement before your application can
-        proceed to the interview stage.
-      </Text>
-      <TouchableOpacity
-        className="rounded-xl py-3 items-center"
-        style={{ backgroundColor: accentColor }}
-        onPress={handleSign}
-        disabled={signing}
-      >
-        {signing ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text className="font-extrabold text-white">Sign Agreement</Text>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-}
-
 // ─── Interview scheduling section ─────────────────────────────────────────────
 function InterviewSection({
   app,
@@ -198,21 +90,6 @@ function InterviewSection({
         </Text>
         <Text className="mt-2 text-sm font-bold capitalize" style={{ color: resultColor }}>
           {interview.status}
-        </Text>
-      </View>
-    );
-  }
-
-  // Agreement must be signed first
-  if (!app.agreementSignedAt) {
-    return (
-      <View className="mt-5 rounded-3xl border border-border bg-white p-4 dark:bg-gray-800">
-        <View className="flex-row items-center gap-2">
-          <Ionicons name="lock-closed-outline" size={18} color={COLORS.mutedLight} />
-          <Text className="font-extrabold text-mutedLight">Interview Scheduling</Text>
-        </View>
-        <Text className="mt-1 text-sm text-sand">
-          Sign the adoption agreement above to unlock interview scheduling.
         </Text>
       </View>
     );
@@ -336,7 +213,7 @@ export default function ApplicationDetails() {
     : getAdoptionCompletedSteps(app, interview, homeVisit);
   const completedCount = completedSteps.filter(Boolean).length;
 
-  // Show agreement + interview sections only for adoption (not foster)
+  // Show interview scheduling section only for adoption (not foster)
   const showAssessmentActions =
     !isFoster && app.status !== "rejected" && app.status !== "approved";
 
@@ -430,14 +307,7 @@ export default function ApplicationDetails() {
               Complete these steps to move your application forward.
             </Text>
 
-            {/* 1. Agreement sign-off */}
-            <AgreementSection
-              app={app}
-              accentColor={accentColor}
-              onAgreementSigned={load}
-            />
-
-            {/* 2. Interview scheduling */}
+            {/* Interview scheduling */}
             <InterviewSection
               app={app}
               interview={interview}

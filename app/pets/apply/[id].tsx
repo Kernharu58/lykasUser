@@ -261,35 +261,29 @@ export default function AdoptionApplication() {
         {/* Bottom nav buttons */}
         <View
           className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t px-6 py-4"
-          style={{ borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 16 }}
+          style={{ borderColor, paddingBottom: Platform.OS === "ios" ? 28 : 70}}
         >
-          <View className="flex-row gap-3">
-            {step > 1 && (
-              <TouchableOpacity
-                className="flex-1 rounded-2xl border py-4"
-                style={{ borderColor: accentColor }}
-                onPress={() => setStep((v) => v - 1)}
-              >
-                <Text className="text-center font-extrabold" style={{ color: accentColor }}>Back</Text>
-              </TouchableOpacity>
+          <TouchableOpacity
+            className="w-full rounded-2xl py-4 items-center"
+            style={{ backgroundColor: accentColor }}
+            onPress={next}
+            disabled={loading}
+          > 
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-extrabold">
+                {step === 3
+                  ? isFoster ? "Submit Foster Application" : "Submit Application"
+                  : "Continue"}
+              </Text>
             )}
-            <TouchableOpacity
-              className={`${step > 1 ? "flex-1" : "w-full"} rounded-2xl py-4 items-center`}
-              style={{ backgroundColor: accentColor }}
-              onPress={next}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-extrabold">
-                  {step === 3
-                    ? isFoster ? "Submit Foster Application" : "Submit Application"
-                    : "Continue"}
-                </Text>
-              )}
+          </TouchableOpacity>
+          {step > 1 && (
+            <TouchableOpacity className="mt-3 items-center" onPress={() => setStep((v) => v - 1)}>
+              <Text className="font-extrabold" style={{ color: accentColor }}>Back</Text>
             </TouchableOpacity>
-          </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,7 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../utils/api";
@@ -24,24 +32,26 @@ const sections = [
 
 export default function Profile() {
   const router = useRouter();
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser } = useAuth();
 
-  const [stats, setStats]         = useState({ totalApps: 0, approved: 0, foster: 0, compliance: "—" });
-  const [loading, setLoading]     = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Edit mode
-  const [editMode, setEditMode]   = useState(false);
-  const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [saving, setSaving]       = useState(false);
+  const [stats, setStats]               = useState({ totalApps: 0, approved: 0, foster: 0, compliance: "—" });
+  const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
+  const [fetchError, setFetchError]     = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
 
   const fetchStats = async () => {
+    setFetchError(false);
     try {
       const [appRes, fosterRes, profileRes] = await Promise.allSettled([
         api.get("/applications/my"),
         api.get("/foster/my"),
-        api.get("/auth/me"),   // assumes auth/me endpoint returns current user
+        api.get("/auth/me"),
       ]);
+
+      if ([appRes, fosterRes, profileRes].every(r => r.status === "rejected")) {
+        setFetchError(true);
+      }
 
       let totalApps = 0, approved = 0;
       if (appRes.status === "fulfilled") {
@@ -59,80 +69,78 @@ export default function Profile() {
         const u = profileRes.value.data?.user || profileRes.value.data;
         if (u) {
           setUser(u);
-          setDisplayName(u.displayName || "");
+          if (u.profilePicture) setProfilePicture(u.profilePicture);
         }
       }
 
       setStats({ totalApps, approved, foster: fosterCount, compliance: approved > 0 ? "Active" : "—" });
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); setRefreshing(false); }
+    } catch (e) {
+      console.error("[Profile] fetchStats unexpected error:", e);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   useFocusEffect(useCallback(() => { fetchStats(); }, []));
-
-  const handleSave = async () => {
-    if (!displayName.trim()) { Alert.alert("Required", "Name cannot be empty."); return; }
-    setSaving(true);
-    try {
-      const res = await api.put("/auth/profile", { displayName: displayName.trim() });
-      const updated = res.data?.user || res.data;
-      if (updated) setUser(updated);
-      setEditMode(false);
-      Alert.alert("Updated!", "Your profile has been updated.");
-    } catch (err: any) {
-      Alert.alert("Error", err.response?.data?.message || "Could not update profile.");
-    } finally { setSaving(false); }
-  };
 
   const initial = (user?.displayName || "C").charAt(0).toUpperCase();
 
   return (
     <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchStats(); }} colors={[COLORS.primary]} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchStats(); }}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Avatar + name */}
         <View className="mt-6 items-center">
-          <View className="h-24 w-24 items-center justify-center rounded-full bg-primary shadow-sm">
-            <Text className="text-4xl font-extrabold text-white">{initial}</Text>
+          <View className="h-24 w-24 rounded-full bg-primary items-center justify-center overflow-hidden border-4 border-white shadow-sm">
+            {profilePicture ? (
+              <Image
+                source={{ uri: profilePicture }}
+                className="h-full w-full"
+                resizeMode="cover"
+              />
+            ) : (
+              <Text className="text-4xl font-extrabold text-white">{initial}</Text>
+            )}
           </View>
 
-          {editMode ? (
-            <View className="mt-4 w-full items-center gap-3">
-              <TextInput value={displayName} onChangeText={setDisplayName}
-                placeholder="Display name" placeholderTextColor={COLORS.mutedLight}
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-center text-xl font-extrabold text-ink dark:bg-gray-800 dark:text-white" />
-              <View className="flex-row gap-3">
-                <TouchableOpacity className="flex-1 rounded-2xl border border-border py-3" onPress={() => { setEditMode(false); setDisplayName(user?.displayName || ""); }}>
-                  <Text className="text-center font-bold text-muted">Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="flex-1 rounded-2xl bg-primary py-3" onPress={handleSave} disabled={saving}>
-                  {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-center font-bold text-white">Save</Text>}
-                </TouchableOpacity>
-              </View>
+          <View className="mt-4 items-center">
+            <Text className="text-2xl font-extrabold text-ink dark:text-white">
+              {user?.displayName || "CarePaws User"}
+            </Text>
+            <Text className="mt-1 text-sm font-medium text-muted dark:text-gray-400">{user?.email}</Text>
+            <View className="mt-2 rounded-full bg-mintBg px-3 py-1">
+              <Text className="text-xs font-bold text-mintDeep">Verified pet parent</Text>
             </View>
-          ) : (
-            <View className="mt-4 items-center">
-              <View className="flex-row items-center gap-2">
-                <Text className="text-2xl font-extrabold text-ink dark:text-white">{user?.displayName || "CarePaws User"}</Text>
-                <TouchableOpacity onPress={() => setEditMode(true)}>
-                  <Ionicons name="pencil-outline" size={18} color={COLORS.muted} />
-                </TouchableOpacity>
-              </View>
-              <Text className="mt-1 text-sm font-medium text-muted dark:text-gray-400">{user?.email}</Text>
-              <View className="mt-2 rounded-full bg-mintBg px-3 py-1">
-                <Text className="text-xs font-bold text-mintDeep">Verified pet parent</Text>
-              </View>
-            </View>
-          )}
+          </View>
         </View>
 
+        {/* Connection error banner */}
+        {fetchError && (
+          <View className="mt-5 flex-row items-center rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <Ionicons name="wifi-outline" size={20} color={COLORS.warning} />
+            <Text className="ml-3 flex-1 text-sm font-bold text-amber-800">
+              Could not load your data. Pull down to retry.
+            </Text>
+          </View>
+        )}
+
         {/* Stats card */}
-        <View className="mt-7 rounded-3xl border border-border bg-white p-5 dark:bg-gray-800 dark:border-gray-700">
+        <View className="mt-7 rounded-3xl border border-border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
           <Text className="text-lg font-extrabold text-ink dark:text-white">Care progress</Text>
-          {loading ? <ActivityIndicator color={COLORS.primary} className="mt-4" /> : (
+          {loading ? (
+            <ActivityIndicator color={COLORS.primary} className="mt-4" />
+          ) : (
             <View className="mt-4 flex-row justify-between">
               {[
                 [String(stats.totalApps), "Total Apps"],
@@ -152,9 +160,11 @@ export default function Profile() {
         {/* Nav sections */}
         <View className="mt-6 gap-3">
           {sections.map((item) => (
-            <TouchableOpacity key={item.title}
-              className="flex-row items-center rounded-3xl border border-border bg-white p-4 dark:bg-gray-800 dark:border-gray-700"
-              onPress={() => router.push(item.path as any)}>
+            <TouchableOpacity
+              key={item.title}
+              className="flex-row items-center rounded-3xl border border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+              onPress={() => router.push(item.path as any)}
+            >
               <View className="h-11 w-11 items-center justify-center rounded-full bg-mintBg">
                 <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
               </View>
@@ -166,10 +176,6 @@ export default function Profile() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity className="mt-6 rounded-2xl border border-red-100 bg-red-50 py-4 dark:bg-red-900/20 dark:border-red-900/30" onPress={logout}>
-          <Text className="text-center font-extrabold text-red-500">Log Out</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

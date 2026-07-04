@@ -229,7 +229,7 @@ export default function PetProfile() {
       {/* Unavailability banner + CTA footer */}
       <View
         className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-tan dark:border-gray-800"
-        style={{ paddingBottom: Platform.OS === "ios" ? 32 : 16 }}
+        style={{ paddingBottom: Platform.OS === "ios" ? 32 : 70}}
       >
         <UnavailableBanner />
 

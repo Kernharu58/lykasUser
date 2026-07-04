@@ -28,29 +28,34 @@ export default function ChatMessage({ item }: ChatMessageProps) {
       : "");
 
   return (
-    <View className={`mb-4 w-full flex-row items-end ${isUser ? "justify-end" : "justify-start"}`}>
+    // NOTE: alignment/color can't be a NativeWind className built from `isUser` (see utils/colors.ts) —
+    // set via inline style so it's guaranteed to apply on native.
+    <View className="mb-4 w-full flex-row items-end" style={{ justifyContent: isUser ? "flex-end" : "flex-start" }}>
       {!isUser && (
-        <View className="mb-5 mr-2 h-8 w-8 items-center justify-center rounded-full bg-emerald-700">
+        <View className="mb-5 mr-2 h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: COLORS.primary }}>
           <Ionicons name="paw" size={16} color="white" />
         </View>
       )}
 
       <View className="max-w-[75%]">
         <View
-          className={`rounded-2xl px-4 py-3 shadow-sm ${
+          className="rounded-2xl px-4 py-3 shadow-sm"
+          style={
             isUser
-              ? "rounded-br-sm bg-emerald-800"
-              : "rounded-bl-sm border border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
-          }`}
+              ? { borderBottomRightRadius: 4, backgroundColor: COLORS.primary }
+              : { borderBottomLeftRadius: 4, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.bgSoft }
+          }
         >
-          <Text className={`text-base leading-6 ${isUser ? "text-white" : "text-gray-900 dark:text-white"}`}>{item.text}</Text>
+          <Text className="text-base leading-6" style={{ color: isUser ? COLORS.white : COLORS.ink }}>
+            {item.text}
+          </Text>
         </View>
 
-        <View className={`mt-1 flex-row items-center gap-1 ${isUser ? "justify-end" : "justify-start"}`}>
-          <Text className="text-[10px] text-gray-400">{messageTime}</Text>
+        <View className="mt-1 flex-row items-center gap-1" style={{ justifyContent: isUser ? "flex-end" : "flex-start" }}>
+          <Text className="text-[10px]" style={{ color: COLORS.mutedLight }}>{messageTime}</Text>
           {isUser && item.failed ? <Ionicons name="alert-circle" size={12} color={COLORS.danger} /> : null}
           {isUser && item.pending ? <Ionicons name="time-outline" size={12} color={COLORS.mutedLight} /> : null}
-          {isUser && !item.pending && !item.failed ? <Ionicons name="checkmark-done" size={12} color={COLORS.green400} /> : null}
+          {isUser && !item.pending && !item.failed ? <Ionicons name="checkmark-done" size={12} color={COLORS.primary} /> : null}
         </View>
       </View>
     </View>

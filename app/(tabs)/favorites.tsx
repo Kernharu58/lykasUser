@@ -15,7 +15,7 @@ export default function Favorites() {
 
   return (
     <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}>
         <View className="mt-4 mb-6">
           <Text className="text-3xl font-extrabold text-ink dark:text-white">Saved Pets</Text>
           <Text className="text-muted dark:text-gray-400 mt-2">Keep track of pets you want to revisit.</Text>

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useState, useCallback } from "react";
+import { useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   Keyboard,
   RefreshControl,
@@ -169,7 +169,7 @@ export default function Adopt() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}
         keyboardShouldPersistTaps="handled" 
         refreshControl={
           <RefreshControl

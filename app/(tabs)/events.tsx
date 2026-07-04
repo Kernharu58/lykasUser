@@ -4,9 +4,9 @@ import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState, ErrorState, LoadingState } from "../../components/StateView";
-import { formatDate } from "../../utils/format";
 import api from "../../utils/api";
 import { COLORS } from "../../utils/colors";
+import { formatDate } from "../../utils/format";
 
 const categoryColors: Record<string, string> = {
   "Adoption Drive": COLORS.primary,
@@ -74,7 +74,7 @@ export default function Events() {
   return (
     <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900">
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchEvents(); }} colors={[COLORS.primary]} />}
       >
         <View className="mt-4 mb-5">
