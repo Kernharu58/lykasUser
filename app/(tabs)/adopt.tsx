@@ -23,13 +23,42 @@ interface Pet {
   breed: string;
   imageUrl: string;
   status: string;
+  size?: string;
+  temperament?: string;
+  energyLevel?: string;
 }
 
-// Helper function to match the getPets structure in your snippet
-const getPets = async (params: { category?: string; search?: string }) => {
-  const response = await api.get("/pets", { params });
-  return response.data;
-};
+const SPECIES_OPTS = ["All", "Dog", "Cat", "Rabbit", "Other"];
+const SIZE_OPTS    = ["All", "Small", "Medium", "Large"];
+const ENERGY_OPTS  = ["All", "Low", "Medium", "High"];
+const TEMP_OPTS    = ["All", "Calm", "Playful", "Shy", "Energetic", "Affectionate", "Independent"];
+
+function FilterRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <View className="mb-3">
+      <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View className="flex-row gap-2">
+          {options.map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              onPress={() => onChange(opt)}
+              className="px-4 py-2 rounded-full border"
+              style={{
+                backgroundColor: value === opt ? COLORS.primaryDeep : "white",
+                borderColor: value === opt ? COLORS.primaryDeep : COLORS.border ?? "#E5E7EB",
+              }}
+            >
+              <Text className="text-xs font-bold" style={{ color: value === opt ? "white" : COLORS.muted ?? "#6B7280" }}>
+                {opt}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
 
 export default function Adopt() {
   const router = useRouter();
@@ -37,96 +66,79 @@ export default function Adopt() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined); // Added missing state
-  const [filteredPets, setFilteredPets] = useState<Pet[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchQuery, setSearchQuery]         = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSize, setSelectedSize]         = useState("All");
+  const [selectedEnergy, setSelectedEnergy]     = useState("All");
+  const [selectedTemp, setSelectedTemp]         = useState("All");
 
-  // 👉 Updated to use the requested fetchFilteredPets function
-  const fetchFilteredPets = async () => {
+  const fetchFilteredPets = useCallback(async () => {
     setLoading(true);
     try {
       setError(null);
-      // Pass the state variables directly to the API function
-      const data = await getPets({ 
-        category: selectedCategory, 
-        search: searchQuery 
-      }); 
-      
-      setPets(data); // Set the exact data the server returns
-      setFilteredPets(data); // Also update filtered list for UI rendering
-    } catch (error) {
-      console.error("Failed to fetch pets", error);
+      const params: Record<string, string> = {};
+      if (selectedCategory !== "All") params.category = selectedCategory;
+      if (selectedSize !== "All") params.size = selectedSize;
+      if (selectedEnergy !== "All") params.energyLevel = selectedEnergy;
+      if (selectedTemp !== "All") params.temperament = selectedTemp;
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+
+      const response = await api.get("/pets", { params });
+      setPets(Array.isArray(response.data) ? response.data : []);
+    } catch {
       setError("We could not load the pet list. Check your connection or try again.");
     } finally {
       setLoading(false);
-      setRefreshing(false); // Ensure the refresh spinner stops
+      setRefreshing(false);
     }
-  };
+  }, [selectedCategory, selectedSize, selectedEnergy, selectedTemp, searchQuery]);
 
-  // Trigger the new function when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchFilteredPets();
-    }, [selectedCategory]) // Refetch if category changes
+    }, [fetchFilteredPets])
   );
 
   const onRefresh = () => {
     setRefreshing(true);
-    setSearchQuery(""); 
-    setShowSuggestions(false);
+    setSearchQuery("");
     fetchFilteredPets();
-  };
-
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
-
-    if (text.length > 0) {
-      setShowSuggestions(true);
-      const lowerCaseText = text.toLowerCase();
-      
-      const filtered = pets.filter(
-        (pet) =>
-          pet.name.toLowerCase().includes(lowerCaseText) ||
-          pet.breed.toLowerCase().includes(lowerCaseText)
-      );
-      setFilteredPets(filtered);
-    } else {
-      setShowSuggestions(false);
-      setFilteredPets(pets);
-    }
-  };
-
-  const handleSelectSuggestion = (pet: Pet) => {
-    setSearchQuery(pet.name);
-    setShowSuggestions(false);
-    setFilteredPets([pet]); 
-    Keyboard.dismiss(); 
   };
 
   const clearSearch = () => {
     setSearchQuery("");
-    setShowSuggestions(false);
-    setFilteredPets(pets);
     Keyboard.dismiss();
   };
+
+  const activeFilterCount = [selectedCategory, selectedSize, selectedEnergy, selectedTemp].filter((v) => v !== "All").length;
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
       <View className="flex-row items-center justify-between px-6 mt-4 mb-4">
-        <TouchableOpacity
-          className="flex-row items-center"
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity className="flex-row items-center" onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={20} color={COLORS.primaryDeep} />
           <Text className="text-primary font-bold ml-1">Back</Text>
         </TouchableOpacity>
         <Text className="text-xl font-bold text-darkBlue dark:text-white">Adoption</Text>
-        <View style={{ width: 60 }} />
+        <TouchableOpacity
+          onPress={() => setShowFilters((v) => !v)}
+          className="flex-row items-center px-3 py-2 rounded-xl border"
+          style={{
+            borderColor: activeFilterCount > 0 ? COLORS.primaryDeep : "#E5E7EB",
+            backgroundColor: activeFilterCount > 0 ? COLORS.primaryDeep : "white",
+          }}
+        >
+          <Ionicons name="options-outline" size={16} color={activeFilterCount > 0 ? "white" : COLORS.neutral} />
+          {activeFilterCount > 0 && (
+            <Text className="text-xs font-bold text-white ml-1">{activeFilterCount}</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
-      <View className="px-6 mb-4 z-50" style={{ zIndex: 50 }}>
+      {/* Search bar */}
+      <View className="px-6 mb-3">
         <View className="flex-row items-center bg-white dark:bg-gray-800 rounded-xl px-4 py-3 shadow-sm border border-gray-200 dark:border-gray-700">
           <Ionicons name="search" size={20} color={COLORS.neutral} />
           <TextInput
@@ -134,7 +146,9 @@ export default function Adopt() {
             placeholder="Search by name or breed..."
             placeholderTextColor={COLORS.neutral}
             value={searchQuery}
-            onChangeText={handleSearch}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={fetchFilteredPets}
+            returnKeyType="search"
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
@@ -143,34 +157,30 @@ export default function Adopt() {
             </TouchableOpacity>
           )}
         </View>
-
-        {showSuggestions && filteredPets.length > 0 && (
-          <View 
-            className="absolute top-16 left-6 right-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden" 
-            style={{ elevation: 5, zIndex: 100 }}
-          >
-            {filteredPets.slice(0, 4).map((pet, index) => (
-              <TouchableOpacity
-                key={`suggestion-${pet._id}`}
-                className={`px-4 py-3 flex-row items-center justify-between ${
-                  index !== filteredPets.slice(0, 4).length - 1 ? "border-b border-gray-100 dark:border-gray-700" : ""
-                }`}
-                onPress={() => handleSelectSuggestion(pet)}
-              >
-                <View>
-                  <Text className="text-darkBlue dark:text-white font-bold">{pet.name}</Text>
-                  <Text className="text-neutral text-xs dark:text-gray-400">{pet.breed}</Text>
-                </View>
-                <Ionicons name="arrow-forward" size={16} color={COLORS.gray300} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
       </View>
+
+      {/* Filters panel */}
+      {showFilters && (
+        <View className="px-6 pb-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <FilterRow label="Species" options={SPECIES_OPTS} value={selectedCategory} onChange={setSelectedCategory} />
+          <FilterRow label="Size" options={SIZE_OPTS} value={selectedSize} onChange={setSelectedSize} />
+          <FilterRow label="Energy Level" options={ENERGY_OPTS} value={selectedEnergy} onChange={setSelectedEnergy} />
+          <FilterRow label="Temperament" options={TEMP_OPTS} value={selectedTemp} onChange={setSelectedTemp} />
+          {activeFilterCount > 0 && (
+            <TouchableOpacity
+              onPress={() => { setSelectedCategory("All"); setSelectedSize("All"); setSelectedEnergy("All"); setSelectedTemp("All"); }}
+              className="mt-2 py-2 rounded-xl items-center"
+              style={{ backgroundColor: "#FEE2E2" }}
+            >
+              <Text className="text-red-600 font-bold text-sm">Clear All Filters</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 155 }}
-        keyboardShouldPersistTaps="handled" 
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -184,28 +194,28 @@ export default function Adopt() {
           <LoadingState message="Finding pets..." />
         ) : error ? (
           <ErrorState message={error} onAction={fetchFilteredPets} />
-        ) : (
-          <View className="flex-row flex-wrap justify-between">
-            {filteredPets.length > 0 ? (
-              filteredPets.map((pet) => (
-                <PetCard
-                  key={pet._id}
-                  id={pet._id}
-                  name={pet.name}
-                  breed={pet.breed}
-                  image={pet.imageUrl}
-                  status={pet.status}
-                />
-              ))
-            ) : (
-              <EmptyState
-                title="No pets found"
-                message={searchQuery ? `No pets match "${searchQuery}". Try another name or breed.` : "No adoptable pets are available right now."}
-                icon="search-outline"
-                actionLabel="Clear Search"
-                onAction={clearSearch}
+        ) : pets.length > 0 ? (
+          <View className="flex-row flex-wrap justify-between mt-3">
+            {pets.map((pet) => (
+              <PetCard
+                key={pet._id}
+                id={pet._id}
+                name={pet.name}
+                breed={pet.breed}
+                image={pet.imageUrl}
+                status={pet.status}
               />
-            )}
+            ))}
+          </View>
+        ) : (
+          <View className="mt-6">
+            <EmptyState
+              title="No pets found"
+              message={activeFilterCount > 0 || searchQuery ? "Try adjusting your filters or search query." : "No adoptable pets are available right now."}
+              icon="search-outline"
+              actionLabel={activeFilterCount > 0 || searchQuery ? "Clear Filters" : undefined}
+              onAction={activeFilterCount > 0 || searchQuery ? () => { setSelectedCategory("All"); setSelectedSize("All"); setSelectedEnergy("All"); setSelectedTemp("All"); setSearchQuery(""); } : undefined}
+            />
           </View>
         )}
       </ScrollView>

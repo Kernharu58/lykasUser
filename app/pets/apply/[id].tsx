@@ -25,6 +25,9 @@ export default function AdoptionApplication() {
   const [experience, setExperience] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [householdSize, setHouseholdSize] = useState("");
+  const [isRenting, setIsRenting] = useState(false);
+  const [landlordApproval, setLandlordApproval] = useState(false);
 
   const accentColor = isFoster ? ORANGE : GREEN;
   const bgLight = isFoster ? COLORS.blush : COLORS.bgSoft;
@@ -32,7 +35,7 @@ export default function AdoptionApplication() {
 
   const progress = useMemo(() => (step / 3) * 100, [step]);
   const canContinue =
-    step === 1 ? phone.trim() && address.trim()
+    step === 1 ? phone.trim() && address.trim() && householdSize.trim()
     : step === 2 ? experience.trim()
     : reason.trim();
 
@@ -44,9 +47,12 @@ export default function AdoptionApplication() {
 
     setLoading(true);
     try {
-      const body: Record<string, string> = {
+      const body: Record<string, any> = {
         phone,
         address,
+        householdSize: parseInt(householdSize) || 1,
+        isRenting,
+        landlordApproval: isRenting ? landlordApproval : false,
         experience: isFoster
           ? `Availability: ${fosterPeriod}. ${experience}. Commitment: ${reason}`
           : `${housing}. ${experience}. Reason: ${reason}`,
@@ -137,6 +143,47 @@ export default function AdoptionApplication() {
                   value={address}
                   onChangeText={setAddress}
                 />
+
+                <Text className="mt-5 mb-2 font-extrabold text-gray-900 dark:text-white">Household Size</Text>
+                <TextInput
+                  className="rounded-2xl border px-4 py-4 text-gray-900 dark:text-white dark:bg-gray-700"
+                  style={{ backgroundColor: bgLight, borderColor }}
+                  placeholder="Number of people living with you (e.g. 3)"
+                  placeholderTextColor={COLORS.mutedLight}
+                  keyboardType="number-pad"
+                  value={householdSize}
+                  onChangeText={setHouseholdSize}
+                />
+
+                <View className="mt-5 flex-row items-center">
+                  <TouchableOpacity
+                    onPress={() => { setIsRenting(!isRenting); if (isRenting) setLandlordApproval(false); }}
+                    className="h-7 w-7 rounded-md border-2 items-center justify-center mr-3"
+                    style={{ borderColor: isRenting ? accentColor : '#D1D5DB', backgroundColor: isRenting ? accentColor : 'white' }}
+                  >
+                    {isRenting && <Text className="text-white font-bold text-xs">✓</Text>}
+                  </TouchableOpacity>
+                  <Text className="font-bold text-gray-900 dark:text-white">I am currently renting</Text>
+                </View>
+
+                {isRenting && (
+                  <View className="mt-3 flex-row items-center">
+                    <TouchableOpacity
+                      onPress={() => setLandlordApproval(!landlordApproval)}
+                      className="h-7 w-7 rounded-md border-2 items-center justify-center mr-3"
+                      style={{ borderColor: landlordApproval ? accentColor : '#D1D5DB', backgroundColor: landlordApproval ? accentColor : 'white' }}
+                    >
+                      {landlordApproval && <Text className="text-white font-bold text-xs">✓</Text>}
+                    </TouchableOpacity>
+                    <Text className="font-bold text-gray-700 dark:text-gray-300 flex-1">My landlord has approved keeping a pet</Text>
+                  </View>
+                )}
+
+                {isRenting && !landlordApproval && (
+                  <View className="mt-2 px-3 py-2 rounded-xl" style={{ backgroundColor: '#FEF3C7' }}>
+                    <Text className="text-xs text-amber-700 font-medium">You must have landlord approval before adopting. Please confirm with your landlord first.</Text>
+                  </View>
+                )}
               </View>
             )}
 
