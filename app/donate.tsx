@@ -11,15 +11,13 @@ import { COLORS } from "../utils/colors";
 
 const amounts = [500, 1000, 2500, 5000];
 
-// FIX (Critical #1): Method keys must match PayMongo accepted values
 const methods = [
-  { key: "gcash",     label: "GCash" },
-  { key: "card",      label: "Credit / Debit" },
-  { key: "paymaya",   label: "Maya" },
-  { key: "grab_pay",  label: "GrabPay" },
+  { key: "gcash",    label: "GCash" },
+  { key: "card",     label: "Credit / Debit" },
+  { key: "paymaya",  label: "Maya" },
+  { key: "grab_pay", label: "GrabPay" },
 ];
 
-// FIX (Warning #3): Payment success screen shown after redirect back
 function PaymentSuccessScreen({ amount, onDone }: { amount: number; onDone: () => void }) {
   return (
     <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900 items-center justify-center px-6">
@@ -54,13 +52,11 @@ export default function Donate() {
   const [customAmount, setCustomAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("gcash");
   const [loading, setLoading] = useState(false);
-  // FIX (Warning #3): Track payment success state
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [confirmedAmount, setConfirmedAmount] = useState(0);
 
   const finalAmount = selectedAmount === "custom" ? Number(customAmount) : selectedAmount;
 
-  // FIX (Warning #3): Handle payment success screen done
   if (paymentSuccess) {
     return (
       <PaymentSuccessScreen
@@ -81,14 +77,12 @@ export default function Donate() {
         type: "donation",
         amount: finalAmount,
         description: `Donation to CarePaws Shelter — ₱${finalAmount}`,
-        // FIX (Critical #1): Pass the selected payment method to the backend
         paymentMethod: selectedMethod,
         successUrl: "carepaws://payment/success",
         cancelUrl:  "carepaws://payment/cancel",
       });
       const { checkoutUrl } = res.data;
       if (checkoutUrl) {
-        // FIX (Warning #3): Listen for the deep-link callback and show success screen
         const handleUrl = ({ url }: { url: string }) => {
           if (url?.includes("payment/success")) {
             setConfirmedAmount(finalAmount);
@@ -97,7 +91,6 @@ export default function Donate() {
         };
         const sub = Linking.addEventListener("url", handleUrl);
         await Linking.openURL(checkoutUrl);
-        // Clean up listener after a reasonable window (PayMongo checkout takes ≤10 min)
         setTimeout(() => sub.remove(), 600_000);
       }
     } catch (err: any) {
@@ -167,9 +160,21 @@ export default function Donate() {
             </View>
           </View>
 
+          {/* Money donate button */}
           <TouchableOpacity className="rounded-2xl bg-primary py-4" onPress={handleDonate} disabled={loading}>
             {loading ? <ActivityIndicator color="#fff" /> : <Text className="text-center font-extrabold text-white">Donate ₱{finalAmount > 0 ? finalAmount.toLocaleString() : "—"}</Text>}
           </TouchableOpacity>
+
+          {/* ✅ FIX Bug 3 — Goods donation entry point */}
+          <TouchableOpacity
+            className="mt-3 rounded-2xl border border-primary py-4"
+            onPress={() => router.push("/donate-goods" as any)}
+          >
+            <Text className="text-center font-extrabold text-primary">
+              Donate Goods (Food, Blankets & More)
+            </Text>
+          </TouchableOpacity>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
