@@ -64,7 +64,6 @@ export default function RootLayout() {
         <Stack.Screen name="reset-password" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="donate" options={{ presentation: "modal" }} />
-        <Stack.Screen name="donate-goods" options={{ presentation: "modal" }} />{/* ✅ FIX Bug 2 */}
         <Stack.Screen name="+not-found" options={{ presentation: "modal" }} />
       </Stack>
     </AuthProvider>
