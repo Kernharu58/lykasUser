@@ -4,7 +4,7 @@
     "slug": "lykas_user",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/lykas/carePawLogo.jpg",
+    "icon": "./assets/lykas/carePawLogo.png",
     "scheme": "carepaws",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -18,9 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/lykas/carePawLogo.jpg",
-        "backgroundImage": "./assets/lykas/carePawLogo.jpg",
-        "monochromeImage": "./assets/lykas/carePawLogo.jpg"
+        "foregroundImage": "./assets/lykas/carePawLogo.png",
+        "backgroundImage": "./assets/lykas/carePawLogo.png",
+        "monochromeImage": "./assets/lykas/carePawLogo.png"
       },
       "package": "com.kernharu.carepaws",
       "edgeToEdgeEnabled": true,
@@ -28,7 +28,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/lykas/carePawLogo.jpg",
+      "favicon": "./assets/lykas/carePawLogo.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -36,7 +36,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/lykas/carePawLogo.jpg",
+          "image": "./assets/lykas/carePawLogo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -57,11 +57,7 @@
         "projectId": "f34897a0-809a-4d0e-9fe8-62d4d56da546"
       }
     },
-    "build": {
-      "preview": {
-        "distribution": "internal"
-      }
-    },
+    
     "owner": "kernharu",
     "runtimeVersion": {
       "policy": "appVersion"
