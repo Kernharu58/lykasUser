@@ -57,11 +57,7 @@
         "projectId": "f34897a0-809a-4d0e-9fe8-62d4d56da546"
       }
     },
-    "build": {
-      "preview": {
-        "distribution": "internal"
-      }
-    },
+    
     "owner": "kernharu",
     "runtimeVersion": {
       "policy": "appVersion"
