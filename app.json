@@ -4,7 +4,7 @@
     "slug": "lykas_user",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/lykas/carePawLogo.png",
+    "icon": "./assets/lykas/carePawLogo.jpg",
     "scheme": "carepaws",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -18,9 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/lykas/carePawLogo.png",
-        "backgroundImage": "./assets/lykas/carePawLogo.png",
-        "monochromeImage": "./assets/lykas/carePawLogo.png"
+        "foregroundImage": "./assets/lykas/carePawLogo.jpg",
+        "backgroundImage": "./assets/lykas/carePawLogo.jpg",
+        "monochromeImage": "./assets/lykas/carePawLogo.jpg"
       },
       "package": "com.kernharu.carepaws",
       "edgeToEdgeEnabled": true,
@@ -28,7 +28,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/lykas/carePawLogo.png",
+      "favicon": "./assets/lykas/carePawLogo.jpg",
       "bundler": "metro"
     },
     "plugins": [
@@ -36,7 +36,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/lykas/carePawLogo.png",
+          "image": "./assets/lykas/carePawLogo.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
