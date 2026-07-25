@@ -7,7 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
