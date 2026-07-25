@@ -203,7 +203,10 @@ export default function ChatScreen() {
   const inputDisabled = !userId;
 
   return (
-    <SafeAreaView className="flex-1 bg-bgSoft dark:bg-gray-900" edges={["top"]}>
+    <SafeAreaView
+  className="flex-1 bg-bgSoft dark:bg-gray-900"
+  edges={["top", "bottom"]}
+>
       <View className="rounded-b-[28px] bg-primary px-5 pb-4 pt-3 shadow-sm">
         <View className="flex-row items-center">
           <View className="relative mr-3 h-12 w-12 items-center justify-center rounded-full bg-mintBg">
@@ -230,7 +233,11 @@ export default function ChatScreen() {
         </View>
       ) : null}
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
+<KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+>
         {loading ? (
           <View className="px-4">
             <LoadingState message="Loading messages..." />
@@ -246,7 +253,12 @@ export default function ChatScreen() {
             data={messages}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => <ChatMessage item={item} />}
-            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 18, paddingBottom: isKeyboardVisible ? 16 : 120 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingHorizontal: 16,
+              paddingTop: 18,
+              paddingBottom: 90,
+          }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={GREEN} colors={[GREEN]} />}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -262,7 +274,13 @@ export default function ChatScreen() {
           />
         )}
 
-        <View className="border-t border-border bg-white px-3 pt-2 dark:border-gray-800 dark:bg-gray-900" style={{ paddingBottom: isKeyboardVisible ? 10 : 94 }}>
+<View
+  className="border-t border-border bg-white px-3 pt-2 dark:border-gray-800 dark:bg-gray-900"
+  style={{
+    paddingBottom: Platform.OS === "ios" ? 20 : 16,
+    marginBottom: Platform.OS === "android" ? 20 : 0,
+  }}
+>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8, gap: 8 }}>
             {QUICK_REPLIES.map((qr) => (
               <TouchableOpacity key={qr.text} onPress={() => sendMessage(qr.text)} disabled={inputDisabled} className="rounded-full border border-primary/30 bg-mintBg px-4 py-2 disabled:opacity-50">
@@ -271,7 +289,7 @@ export default function ChatScreen() {
             ))}
           </ScrollView>
 
-          <View className="flex-row items-end pb-16">
+          <View className="flex-row items-end">
             <TouchableOpacity className="mr-2 h-11 w-11 items-center justify-center rounded-full bg-green" onPress={() => Alert.alert("Attachments", "Photo and document attachments can be connected to the chat API next.")}>
               <Ionicons name="add" size={24} color={GREEN} />
             </TouchableOpacity>

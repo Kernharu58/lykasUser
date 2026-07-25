@@ -158,21 +158,28 @@ export default function Profile() {
         </View>
 
         {/* Nav sections */}
-        <View className="mt-6 gap-3">
+        <View className="mt-6 flex-row flex-wrap justify-between">
           {sections.map((item) => (
             <TouchableOpacity
-              key={item.title}
-              className="flex-row items-center rounded-3xl border border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-              onPress={() => router.push(item.path as any)}
-            >
+            key={item.title}
+            className="mb-3 w-[48%] items-center rounded-3xl border border-border bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+            onPress={() => router.push(item.path as any)}
+          >
               <View className="h-11 w-11 items-center justify-center rounded-full bg-mintBg">
-                <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
-              </View>
-              <View className="ml-4 flex-1">
-                <Text className="font-extrabold text-ink dark:text-white">{item.title}</Text>
-                <Text className="text-sm text-muted dark:text-gray-400">{item.subtitle}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.sand} />
+  <Ionicons
+    name={item.icon as any}
+    size={22}
+    color={COLORS.primary}
+  />
+</View>
+
+<Text className="mt-3 text-center font-extrabold text-ink dark:text-white">
+  {item.title}
+</Text>
+
+<Text className="mt-1 text-center text-xs text-muted dark:text-gray-400">
+  {item.subtitle}
+</Text>
             </TouchableOpacity>
           ))}
         </View>

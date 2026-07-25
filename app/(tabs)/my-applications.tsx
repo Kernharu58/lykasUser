@@ -218,6 +218,27 @@ export default function MyApplications() {
           </Text>
         </View>
 
+        {/* Quick actions */}
+<View className="mb-5 flex-row gap-3">
+  <TouchableOpacity
+    className="flex-1 rounded-2xl bg-primary py-4"
+    onPress={() => router.push("/foster-dashboard" as any)}
+  >
+    <Text className="text-center font-extrabold text-white">
+      Foster Trial
+    </Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    className="flex-1 rounded-2xl border border-primary py-4"
+    onPress={() => router.push("/documents" as any)}
+  >
+    <Text className="text-center font-extrabold text-primary">
+      Documents
+    </Text>
+  </TouchableOpacity>
+</View>
+
         {error ? (
           <ErrorState message={error} onAction={fetchApplications} />
         ) : applications.length === 0 ? (
@@ -306,25 +327,7 @@ export default function MyApplications() {
           </View>
         )}
 
-        {/* Quick actions */}
-        <View className="mt-6 flex-row gap-3">
-          <TouchableOpacity
-            className="flex-1 rounded-2xl bg-primary py-4"
-            onPress={() => router.push("/foster-dashboard" as any)}
-          >
-            <Text className="text-center font-extrabold text-white">
-              Foster Trial
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-1 rounded-2xl border border-primary py-4"
-            onPress={() => router.push("/documents" as any)}
-          >
-            <Text className="text-center font-extrabold text-primary">
-              Documents
-            </Text>
-          </TouchableOpacity>
-        </View>
+        
       </ScrollView>
     </SafeAreaView>
   );
