@@ -36,6 +36,8 @@ export default function LogIn() {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
 
+
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -71,7 +73,8 @@ export default function LogIn() {
   androidClientId: ANDROID_CLIENT_ID,
   iosClientId: IOS_CLIENT_ID,
   redirectUri: makeRedirectUri({
-    scheme: "com.kernharu.carepaws:/oauth2redirect/google"
+    scheme: "carepaws",
+    path: "oauth2redirect/google",
   }),
 });
 
