@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter, useSegments, useRootNavigationState } from "expo-router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from '@/utils/api';
@@ -102,6 +103,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await SecureStore.deleteItemAsync("userData");
       } catch (err) {
         console.error("[AuthContext] Error deleting from SecureStore:", err);
+      }
+
+      try {
+        if (GoogleSignin.hasPreviousSignIn()) {
+          await GoogleSignin.signOut();
+        }
+      } catch (err) {
+        console.warn("[AuthContext] Google sign-out failed:", err);
       }
 
       setUserToken(null);
