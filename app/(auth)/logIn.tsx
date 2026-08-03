@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
-import api from "../../utils/api";
+import api, { storeAuthTokens } from "../../utils/api";
 import { COLORS } from "../../utils/colors";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -99,7 +99,7 @@ export default function LogIn() {
     try {
       const res = await api.post("/auth/google", { idToken });
 
-      await SecureStore.setItemAsync("userToken", res.data.token);
+      await storeAuthTokens(res.data.token, res.data.refreshToken);
       await SecureStore.setItemAsync("userName", res.data.user.displayName || "");
       await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user));
 
@@ -124,7 +124,7 @@ export default function LogIn() {
     try {
       const res = await api.post("/auth/login", { email, password });
 
-      await SecureStore.setItemAsync("userToken", res.data.token);
+      await storeAuthTokens(res.data.token, res.data.refreshToken);
       await SecureStore.setItemAsync("userName", res.data.user.displayName || "");
       await SecureStore.setItemAsync("userData", JSON.stringify(res.data.user));
 

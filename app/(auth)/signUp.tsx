@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
-import { registerWithRetry } from "../../utils/api";
+import { registerWithRetry, storeAuthTokens } from "../../utils/api";
 import { COLORS } from "../../utils/colors";
 
 export default function SignUp() {
@@ -68,7 +68,7 @@ export default function SignUp() {
       if (response.token) {
         const userData = response.user || { displayName: trimmedName, email: trimmedEmail };
 
-        await SecureStore.setItemAsync("userToken", response.token);
+        await storeAuthTokens(response.token, response.refreshToken);
         await SecureStore.setItemAsync("userName", userData.displayName || trimmedName);
         await SecureStore.setItemAsync("userData", JSON.stringify(userData));
 
