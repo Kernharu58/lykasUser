@@ -46,7 +46,14 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/lykas/carePawLogo.png",
+          "color": "#1E6B45"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -3,6 +3,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter, useSegments, useRootNavigationState } from "expo-router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api, { clearAuthTokens } from '@/utils/api';
+import { clearPushTokenOnServer, syncPushTokenWithServer } from '@/utils/pushNotifications';
 
 // FIX (Critical #6): Typed user interface instead of `any`
 interface AuthUser {
@@ -87,9 +88,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userToken, segments, isLoading, rootNavigationState?.key, router]);
 
+  // Request notification permission and register the device's push token
+  // once we actually have an authenticated user — covers both a fresh
+  // login/signup and a relaunch that restores a stored token. Runs at most
+  // once per token value (not on every render) since it's keyed off
+  // `userToken` itself.
+  useEffect(() => {
+    if (!userToken) return;
+    syncPushTokenWithServer();
+  }, [userToken]);
+
   const logout = async () => {
     try {
       if (userToken) {
+        await clearPushTokenOnServer().catch(() => {});
         await api.post('/auth/logout').catch(err => {
           console.warn("[AuthContext] Logout API call failed:", err.message);
         });
