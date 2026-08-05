@@ -12,7 +12,6 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
@@ -28,7 +27,6 @@
     "expo-image": "~55.0.11",
     "expo-image-picker": "~55.0.22",
     "expo-linking": "~55.0.16",
-    "expo-modules-core": "^55.0.25",
     "expo-notifications": "~55.0.25",
     "expo-router": "~55.0.17",
     "expo-secure-store": "~55.0.16",
@@ -52,8 +50,9 @@
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "babel-preset-expo": "~54.0.10",
+    "@expo/ngrok": "^4.1.0",
+    "@types/react": "~19.2.0",
+    "babel-preset-expo": "~55.0.22",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"

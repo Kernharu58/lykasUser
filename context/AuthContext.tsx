@@ -1,9 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { useRouter, useSegments, useRootNavigationState } from "expo-router";
-import React, { createContext, useContext, useEffect, useState } from "react";
+
 import api, { clearAuthTokens } from '@/utils/api';
 import { clearPushTokenOnServer, syncPushTokenWithServer } from '@/utils/pushNotifications';
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 // FIX (Critical #6): Typed user interface instead of `any`
 interface AuthUser {
@@ -117,13 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("[AuthContext] Error deleting from SecureStore:", err);
       }
 
-      try {
-        if (GoogleSignin.hasPreviousSignIn()) {
-          await GoogleSignin.signOut();
-        }
-      } catch (err) {
-        console.warn("[AuthContext] Google sign-out failed:", err);
-      }
 
       setUserToken(null);
       setUser(null);
